@@ -1,62 +1,81 @@
-PINO FACU / WEB V3.1
-====================
+PINO FACU / WEB V4
+==================
 
 ARCHIVOS
 --------
 Páginas:   index.html, reventa.html, remates.html, admin-remates.html
 Estilos:   style.css (compartido), index.css, reventa.css, remates.css
-Scripts:   site.js (menú móvil y año del pie, en todas las páginas)
-           remates.js (página pública de remates + administrador)
-           firebase-config.js (datos de Firebase; vacío = modo demo)
-Firebase:  firestore.rules, storage.rules
+Scripts:   site.js (menú móvil y año del pie)
+           remates.js (página pública de remates)
+           admin-remates.js (administrador: guarda en GitHub)
+Datos:     remates/remates.json (los remates)  ·  remates/fotos/ (sus fotos)
+           remates/admin-key.json (lo crea el admin la primera vez)
+Dominio:   CNAME (pinofacu.com), robots.txt, sitemap.xml
 
-Subí todos los archivos juntos, en la misma carpeta.
-
-
-PARA PROBAR
------------
-Servir la carpeta con un servidor local (por ejemplo: python -m http.server 8000)
-o con GitHub Pages, y abrir index.html. El admin está en admin-remates.html.
+BORRAR DEL REPO (ya no se usan): firebase-config.js, firestore.rules, storage.rules
 
 
-MODO DEMO (sin Firebase)
-------------------------
-- El admin guarda en el navegador (localStorage). NO publica a otros dispositivos.
-- Las fotos se achican automáticamente para que entren en el espacio del navegador.
-- El remate de ejemplo no envía ofertas reales. Si en ese navegador se marca un
-  remate como "Publicado", se habilita el enlace de WhatsApp; eso NO es una
-  publicación pública.
+1. CREAR LA CLAVE DE GITHUB (una sola vez)
+-------------------------------------------
+GitHub › foto de perfil › Settings › Developer settings › Personal access tokens
+› Fine-grained tokens › Generate new token.
+  - Token name: admin remates pinofacu
+  - Expiration: la más larga que permita (anotá la fecha de vencimiento)
+  - Resource owner: PinoFacu
+  - Repository access: Only select repositories › PinoFacu/web
+  - Permissions › Repository permissions › Contents: Read and write
+    (no hace falta ningún otro permiso)
+Copiar el token (empieza con github_pat_). GitHub lo muestra una sola vez.
 
 
-PUBLICACIÓN REAL
+2. CONFIGURAR EL ADMIN (una sola vez)
+-------------------------------------
+Entrar a https://pinofacu.com/admin-remates.html (o a la dirección github.io
+mientras el dominio no esté listo). Como es la primera vez, pide:
+  - la clave de GitHub (el token del paso 1)
+  - la contraseña del admin (dos veces)
+Al guardar, la clave queda cifrada con la contraseña en remates/admin-key.json.
+Desde ahí, en cualquier dispositivo se entra SOLO con la contraseña.
+
+Si vence el token o querés cambiar la contraseña: en la pantalla de ingreso,
+"¿Cambiaste la contraseña o venció la clave de GitHub?" › CONFIGURAR ACCESO.
+
+
+3. USAR EL ADMIN
 ----------------
-1. Crear un proyecto en Firebase y habilitar Firestore, Storage y
-   Authentication (Email/Password).
-2. Crear el usuario administrador en Authentication y copiar su UID.
-3. En firebase-config.js, completar PF_FIREBASE_CONFIG con los datos web del
-   proyecto y PF_ADMIN_UID con ese UID (hay un ejemplo comentado en el archivo).
-4. En firestore.rules y storage.rules, reemplazar REEMPLAZAR_CON_UID_ADMIN por
-   el UID y publicar esas reglas en Firebase.
-5. Publicar los archivos por HTTPS, iniciar sesión en admin-remates.html y cargar
-   el mueble, las fotos, el precio base y el estado "Publicado".
-6. Verificar que la página pública muestra el remate y que WhatsApp recibe el
-   mensaje.
+- + NUEVO REMATE: nombre, descripción, precio base, estado y hasta 5 fotos.
+- Estados: Publicado (recibe ofertas) · Cerrado (se ve, sin ofertas) · Oculto.
+- En cada remate: EDITAR, OCULTAR/MOSTRAR, ELIMINAR (borra también sus fotos)
+  y ↑ para cambiar el orden en la web.
+- Cada cambio es un commit en GitHub. La web se actualiza en 1 o 2 minutos.
+- "Recordar en este dispositivo" evita pedir la contraseña de nuevo. No lo
+  marques en computadoras compartidas.
+- La página del admin no se enlaza desde la web y les pide a los buscadores
+  que no la indexen.
 
 
-ESTADOS DEL REMATE
-------------------
-- Borrador:  la página pública muestra "Próximamente" (las reglas impiden leerlo).
-- Publicado: se ve el mueble y se pueden enviar ofertas.
-- Cerrado:   se ve el mueble con el aviso de remate cerrado.
-
-
-LÍMITES DE ESTA VERSIÓN
+4. DOMINIO pinofacu.com
 -----------------------
-La oferta se VALIDA en el navegador antes de generar el enlace de WhatsApp.
-No hay registro de ofertas, cierre automático, subasta de mayor postor,
-adjudicación ni pasarela de pago. El comercio recibe y gestiona las propuestas
-por WhatsApp. Las fotos reemplazadas quedan guardadas en Storage (se pueden
-borrar a mano desde la consola de Firebase).
+a) Subir el archivo CNAME (ya incluido) a la raíz del repo.
+b) GitHub › PinoFacu/web › Settings › Pages › Custom domain: pinofacu.com › Save.
+c) En el panel DNS de donde compraste el dominio, cargar:
+     Tipo A     Host @     185.199.108.153
+     Tipo A     Host @     185.199.109.153
+     Tipo A     Host @     185.199.110.153
+     Tipo A     Host @     185.199.111.153
+     Tipo CNAME Host www   pinofacu.github.io
+   (Opcional, IPv6: AAAA @ 2606:50c0:8000::153, 2606:50c0:8001::153,
+    2606:50c0:8002::153, 2606:50c0:8003::153)
+   Borrar cualquier otro registro A o CNAME de @ y www que venga por defecto
+   (por ejemplo, el de "página en construcción" del proveedor).
+d) Esperar a que GitHub marque "DNS check successful" (de minutos a 24 h) y
+   tildar "Enforce HTTPS".
+e) Recomendado: GitHub › Settings (de la cuenta) › Pages › Add a domain,
+   para verificar pinofacu.com y que nadie más pueda usarlo.
 
-Antes de lanzar un remate comercial, definir condiciones, disponibilidad,
-vigencia y normativa aplicable.
+
+LÍMITES
+-------
+La oferta se valida en el navegador antes de abrir WhatsApp. No hay registro
+de ofertas, cierre automático, adjudicación ni pagos online: Pino Facu recibe
+y gestiona las propuestas por WhatsApp.

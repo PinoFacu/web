@@ -57,9 +57,7 @@
         <div class="pf-wrap">
           <span class="pf-pill">🔨 UNA FORMA DIFERENTE DE COMPRAR</span>
           <h1>REMATES<br /></h1>
-          <p>
-            Vos decidís cuánto ofrecer. Tu propuesta va directo a nuestro WhatsApp.
-          </p>
+          <p>Vos decidís cuánto ofrecer. Tu propuesta va directo a nuestro WhatsApp.</p>
           <a class="pf-button dark" href="#vidriera">VER REMATES ↓</a>
         </div>
         <div class="rem-hammer" aria-hidden="true">🔨</div>
@@ -93,67 +91,69 @@
           <span class="pf-kicker is-coral" id="vidriera">APURATE QUE SE AGOTAN</span>
           <h2 class="pf-display pf-sectiontitle">MUEBLES DISPONIBLES</h2>
 
-          <div class="rem-stage">
-            <div class="rem-gallery">
-              <div class="rem-photo">
-                <img
-                  id="rem-image"
-                  src="https://raw.githubusercontent.com/PinoFacu/web/refs/heads/main/images/coemdor.jpg"
-                  alt="Mueble del remate"
-                />
-              </div>
-              <div class="rem-thumbs" id="rem-thumbs" hidden></div>
-            </div>
-
-            <div class="rem-panel" id="rem-panel" aria-busy="true">
-              <span class="rem-badge" id="rem-badge" data-status="demo">CARGANDO…</span>
-              <h2 id="rem-name">Juego de comedor</h2>
-              <p id="rem-desc">Un ejemplo para probar la experiencia.</p>
-
-              <div class="rem-price" id="rem-price">
-                <span>PRECIO BASE · NO SE ACEPTA MENOS</span>
-                <strong id="rem-base">$ 100.000</strong>
-              </div>
-
-              <div id="rem-form">
-                <div class="rem-field">
-                  <label for="rem-offer">¿CUÁNTO OFRECÉS?</label>
-                  <div class="rem-input">
-                    <span aria-hidden="true">$</span>
-                    <input
-                      id="rem-offer"
-                      type="number"
-                      min="100000"
-                      step="1"
-                      value="105000"
-                      inputmode="numeric"
-                      aria-describedby="rem-offer-help rem-error"
-                    />
-                  </div>
-                  <small id="rem-offer-help">Ingresá un importe igual o mayor al precio base, sin centavos.</small>
-                </div>
-
-                <div class="rem-quick" role="group" aria-label="Sumar al importe">
-                  <button type="button" data-add="5000">+ $5.000</button>
-                  <button type="button" data-add="10000">+ $10.000</button>
-                  <button type="button" data-add="20000">+ $20.000</button>
-                </div>
-
-                <a class="pf-button rem-send" id="rem-send" target="_blank" rel="noopener" aria-disabled="true">
-                  ENVIAR OFERTA POR WHATSAPP ↗
-                </a>
-                <p class="rem-message" id="rem-error" role="status" aria-live="polite"></p>
-              </div>
-
-              <div class="rem-notice" id="rem-notice" hidden>
-                <strong id="rem-notice-title">Este remate está cerrado.</strong>
-                <p id="rem-notice-text">Seguí nuestras redes para enterarte del próximo.</p>
-                <a class="pf-button dark" href="https://www.instagram.com/pinofaculp/" target="_blank" rel="noopener">
-                  SEGUINOS EN INSTAGRAM ↗
-                </a>
-              </div>
-            </div>
+          <div class="rem-list" id="rem-list" aria-busy="true">
+            <p class="rem-loading">Cargando remates…</p>
           </div>
+
+          <!-- Se muestra cuando no hay remates publicados -->
+          <div class="rem-empty" id="rem-empty" hidden>
+            <span aria-hidden="true">🔨</span>
+            <strong id="rem-empty-title">Estamos preparando los próximos remates.</strong>
+            <p id="rem-empty-text">Seguinos en Instagram para enterarte apenas se publiquen.</p>
+            <a class="pf-button dark" href="https://www.instagram.com/pinofaculp/" target="_blank" rel="noopener">
+              SEGUINOS EN INSTAGRAM ↗
+            </a>
+          </div>
+
+          <!-- Molde de cada remate: remates.js lo copia una vez por mueble -->
+          <template id="rem-item-template">
+            <article class="rem-stage rem-item">
+              <div class="rem-gallery">
+                <div class="rem-photo">
+                  <img class="rem-image" alt="" />
+                </div>
+                <div class="rem-thumbs" hidden></div>
+              </div>
+
+              <div class="rem-panel">
+                <span class="rem-badge"></span>
+                <h3 class="rem-name"></h3>
+                <p class="rem-desc"></p>
+
+                <div class="rem-price">
+                  <span>PRECIO BASE · NO SE ACEPTA MENOS</span>
+                  <strong class="rem-base"></strong>
+                </div>
+
+                <div class="rem-form">
+                  <div class="rem-field">
+                    <label class="rem-offer-label">¿CUÁNTO OFRECÉS?</label>
+                    <div class="rem-input">
+                      <span aria-hidden="true">$</span>
+                      <input class="rem-offer" type="number" step="1" inputmode="numeric" />
+                    </div>
+                    <small>Ingresá un importe igual o mayor al precio base, sin centavos.</small>
+                  </div>
+
+                  <div class="rem-quick" role="group" aria-label="Sumar al importe">
+                    <button type="button" data-add="5000">+ $5.000</button>
+                    <button type="button" data-add="10000">+ $10.000</button>
+                    <button type="button" data-add="20000">+ $20.000</button>
+                  </div>
+
+                  <a class="pf-button rem-send" target="_blank" rel="noopener" aria-disabled="true">
+                    ENVIAR OFERTA POR WHATSAPP ↗
+                  </a>
+                  <p class="rem-message" role="status" aria-live="polite"></p>
+                </div>
+
+                <div class="rem-notice" hidden>
+                  <strong>Este remate está cerrado.</strong>
+                  <p>Seguí nuestras redes para enterarte del próximo.</p>
+                </div>
+              </div>
+            </article>
+          </template>
 
           <!-- ===== Condiciones ===== -->
           <div class="rem-rules">
@@ -192,7 +192,6 @@
     </footer>
 
     <script src="site.js" defer></script>
-    <script src="firebase-config.js"></script>
     <script type="module" src="remates.js"></script>
   </body>
 </html>

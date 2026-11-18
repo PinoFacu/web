@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-18T21:01:05.105Z",
+  "updatedAt": "2026-11-18T21:01:57.794Z",
   "items": [
     {
       "id": "comedor",
       "name": "Juego de comedor",
       "description": "Remate de ejemplo. Editalo desde el admin o eliminalo.",
       "base": 100000,
-      "status": "hidden",
+      "status": "active",
       "photos": [
         "images/coemdor.jpg"
       ]

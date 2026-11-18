@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fc5d5c" />
+    <meta
+      name="description"
+      content="Remates Pino Facu: un mueble, un precio de salida y vos decidís cuánto ofrecer. Tu oferta va directo a nuestro WhatsApp."
+    />
+    <title>Remates | Pino Facu</title>
+
+    <link
+      rel="icon"
+      href="https://ugc.production.linktr.ee/CGWVNMRSiGrGj9mKFbsZ_u9J97SeDEvWXLd37?io=true&amp;size=avatar-v3_0"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="remates.css" />
+  </head>
+
+  <body>
+    <a class="pf-skip" href="#contenido">Saltar al contenido</a>
+
+    <!-- ===== Header ===== -->
+    <header class="pf-header">
+      <div class="pf-wrap pf-nav">
+        <a class="pf-logo" href="index.html">
+          <img
+            src="https://ugc.production.linktr.ee/CGWVNMRSiGrGj9mKFbsZ_u9J97SeDEvWXLd37?io=true&amp;size=avatar-v3_0"
+            alt="Logo Pino Facu"
+          />
+          <span>PINO FACU</span>
+        </a>
+
+        <button class="pf-menu" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="pf-links">
+          ☰
+        </button>
+
+        <nav class="pf-links" id="pf-links" aria-label="Principal">
+          <a href="index.html#comprar">COMPRAR</a>
+          <a href="remates.html" aria-current="page">REMATES</a>
+          <a href="index.html#local">EL LOCAL</a>
+          <a class="pf-button" href="https://pency.app/pinofacu" target="_blank" rel="noopener">TIENDA ONLINE ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido">
+      <!-- ===== Hero ===== -->
+      <section class="rem-hero">
+        <div class="pf-wrap">
+          <span class="pf-pill">🔨 UNA FORMA DIFERENTE DE COMPRAR</span>
+          <h1>REMATES<br /></h1>
+          <p>
+            Vos decidís cuánto ofrecer. Tu propuesta va directo a nuestro WhatsApp.
+          </p>
+          <a class="pf-button dark" href="#vidriera">VER REMATES ↓</a>
+        </div>
+        <div class="rem-hammer" aria-hidden="true">🔨</div>
+      </section>
+
+      <section class="pf-section">
+        <div class="pf-wrap">
+          <!-- ===== Cómo funciona ===== -->
+          <span class="pf-kicker is-coral">SÚPER SIMPLE</span>
+          <h2 class="pf-display pf-sectiontitle">¿CÓMO FUNCIONA?</h2>
+
+          <div class="rem-how">
+            <article>
+              <strong>01.</strong>
+              <h3>PUBLICAMOS UN MUEBLE</h3>
+              <p>Elegimos el stock disponible, subimos fotos y fijamos el precio base.</p>
+            </article>
+            <article>
+              <strong>02.</strong>
+              <h3>VOS OFRECÉS</h3>
+              <p>Escribís tu oferta. El formulario no permite ofertas por debajo del precio base.</p>
+            </article>
+            <article>
+              <strong>03.</strong>
+              <h3>VAMOS A WHATSAPP</h3>
+              <p>Recibimos tu oferta y coordinamos.</p>
+            </article>
+          </div>
+
+          <!-- ===== Vidriera ===== -->
+          <span class="pf-kicker is-coral" id="vidriera">APURATE QUE SE AGOTAN</span>
+          <h2 class="pf-display pf-sectiontitle">MUEBLES DISPONIBLES</h2>
+
+          <div class="rem-stage">
+            <div class="rem-gallery">
+              <div class="rem-photo">
+                <img
+                  id="rem-image"
+                  src="https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/RoperoDePino-3Puertas-2.png"
+                  alt="Mueble del remate"
+                />
+              </div>
+              <div class="rem-thumbs" id="rem-thumbs" hidden></div>
+            </div>
+
+            <div class="rem-panel" id="rem-panel" aria-busy="true">
+              <span class="rem-badge" id="rem-badge" data-status="demo">CARGANDO…</span>
+              <h2 id="rem-name">Ropero de pino · 3 puertas</h2>
+              <p id="rem-desc">Un ejemplo para probar la experiencia.</p>
+
+              <div class="rem-price" id="rem-price">
+                <span>PRECIO BASE · NO SE ACEPTA MENOS</span>
+                <strong id="rem-base">$ 100.000</strong>
+              </div>
+
+              <div id="rem-form">
+                <div class="rem-field">
+                  <label for="rem-offer">¿CUÁNTO OFRECÉS?</label>
+                  <div class="rem-input">
+                    <span aria-hidden="true">$</span>
+                    <input
+                      id="rem-offer"
+                      type="number"
+                      min="100000"
+                      step="1"
+                      value="105000"
+                      inputmode="numeric"
+                      aria-describedby="rem-offer-help rem-error"
+                    />
+                  </div>
+                  <small id="rem-offer-help">Ingresá un importe igual o mayor al precio base, sin centavos.</small>
+                </div>
+
+                <div class="rem-quick" role="group" aria-label="Sumar al importe">
+                  <button type="button" data-add="5000">+ $5.000</button>
+                  <button type="button" data-add="10000">+ $10.000</button>
+                  <button type="button" data-add="20000">+ $20.000</button>
+                </div>
+
+                <a class="pf-button rem-send" id="rem-send" target="_blank" rel="noopener" aria-disabled="true">
+                  ENVIAR OFERTA POR WHATSAPP ↗
+                </a>
+                <p class="rem-message" id="rem-error" role="status" aria-live="polite"></p>
+              </div>
+
+              <div class="rem-notice" id="rem-notice" hidden>
+                <strong id="rem-notice-title">Este remate está cerrado.</strong>
+                <p id="rem-notice-text">Seguí nuestras redes para enterarte del próximo.</p>
+                <a class="pf-button dark" href="https://www.instagram.com/pinofaculp/" target="_blank" rel="noopener">
+                  SEGUINOS EN INSTAGRAM ↗
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Condiciones ===== -->
+          <div class="rem-rules">
+            <strong>IMPORTANTE</strong>
+            <p>
+              La oferta enviada por WhatsApp no implica compra ni adjudicación automática. Pino Facu confirma
+              disponibilidad, aceptación y entrega.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== Footer ===== -->
+    <footer class="pf-foot">
+      <div class="pf-wrap">
+        <div class="pf-footgrid">
+          <div>
+            <div class="pf-kicker is-yellow">DESDE LA PLATA</div>
+            <h2>¡SIEMPRE ATR!</h2>
+            <p>Muebles de pino y más.</p>
+          </div>
+          <nav class="pf-footlinks" aria-label="Enlaces del pie">
+            <a href="index.html">INICIO</a>
+            <a href="https://pency.app/pinofacu" target="_blank" rel="noopener">TIENDA ↗</a>
+            <a href="reventa.html">REVENTA</a>
+            <a href="https://www.instagram.com/pinofaculp/" target="_blank" rel="noopener">INSTAGRAM ↗</a>
+            <a href="https://wa.me/542216013657" target="_blank" rel="noopener">WHATSAPP ↗</a>
+          </nav>
+        </div>
+        <div class="pf-footbottom">
+          <span>© <span data-year></span> PINO FACU - LA PLATA</span>
+          <span>CALLE 80 Nº 715, ENTRE 9 Y 10</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="site.js" defer></script>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="remates.js"></script>
+  </body>
+</html>

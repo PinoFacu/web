@@ -1,0 +1,62 @@
+PINO FACU / WEB V3.1
+====================
+
+ARCHIVOS
+--------
+Páginas:   index.html, reventa.html, remates.html, admin-remates.html
+Estilos:   style.css (compartido), index.css, reventa.css, remates.css
+Scripts:   site.js (menú móvil y año del pie, en todas las páginas)
+           remates.js (página pública de remates + administrador)
+           firebase-config.js (datos de Firebase; vacío = modo demo)
+Firebase:  firestore.rules, storage.rules
+
+Subí todos los archivos juntos, en la misma carpeta.
+
+
+PARA PROBAR
+-----------
+Servir la carpeta con un servidor local (por ejemplo: python -m http.server 8000)
+o con GitHub Pages, y abrir index.html. El admin está en admin-remates.html.
+
+
+MODO DEMO (sin Firebase)
+------------------------
+- El admin guarda en el navegador (localStorage). NO publica a otros dispositivos.
+- Las fotos se achican automáticamente para que entren en el espacio del navegador.
+- El remate de ejemplo no envía ofertas reales. Si en ese navegador se marca un
+  remate como "Publicado", se habilita el enlace de WhatsApp; eso NO es una
+  publicación pública.
+
+
+PUBLICACIÓN REAL
+----------------
+1. Crear un proyecto en Firebase y habilitar Firestore, Storage y
+   Authentication (Email/Password).
+2. Crear el usuario administrador en Authentication y copiar su UID.
+3. En firebase-config.js, completar PF_FIREBASE_CONFIG con los datos web del
+   proyecto y PF_ADMIN_UID con ese UID (hay un ejemplo comentado en el archivo).
+4. En firestore.rules y storage.rules, reemplazar REEMPLAZAR_CON_UID_ADMIN por
+   el UID y publicar esas reglas en Firebase.
+5. Publicar los archivos por HTTPS, iniciar sesión en admin-remates.html y cargar
+   el mueble, las fotos, el precio base y el estado "Publicado".
+6. Verificar que la página pública muestra el remate y que WhatsApp recibe el
+   mensaje.
+
+
+ESTADOS DEL REMATE
+------------------
+- Borrador:  la página pública muestra "Próximamente" (las reglas impiden leerlo).
+- Publicado: se ve el mueble y se pueden enviar ofertas.
+- Cerrado:   se ve el mueble con el aviso de remate cerrado.
+
+
+LÍMITES DE ESTA VERSIÓN
+-----------------------
+La oferta se VALIDA en el navegador antes de generar el enlace de WhatsApp.
+No hay registro de ofertas, cierre automático, subasta de mayor postor,
+adjudicación ni pasarela de pago. El comercio recibe y gestiona las propuestas
+por WhatsApp. Las fotos reemplazadas quedan guardadas en Storage (se pueden
+borrar a mano desde la consola de Firebase).
+
+Antes de lanzar un remate comercial, definir condiciones, disponibilidad,
+vigencia y normativa aplicable.

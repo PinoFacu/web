@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#252525" />
+    <title>Admin remates | Pino Facu</title>
+
+    <link
+      rel="icon"
+      href="https://ugc.production.linktr.ee/CGWVNMRSiGrGj9mKFbsZ_u9J97SeDEvWXLd37?io=true&amp;size=avatar-v3_0"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="remates.css" />
+  </head>
+
+  <body class="admin-page">
+    <!-- ===== Header ===== -->
+    <header class="pf-header">
+      <div class="pf-wrap pf-nav">
+        <a class="pf-logo" href="index.html">
+          <img
+            src="https://ugc.production.linktr.ee/CGWVNMRSiGrGj9mKFbsZ_u9J97SeDEvWXLd37?io=true&amp;size=avatar-v3_0"
+            alt="Logo Pino Facu"
+          />
+          <span>PINO FACU. <small class="admin-tag">ADMIN</small></span>
+        </a>
+
+        <button class="pf-menu" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="pf-links">
+          ☰
+        </button>
+
+        <nav class="pf-links" id="pf-links" aria-label="Principal">
+          <a href="index.html">INICIO</a>
+          <a class="pf-button dark" href="remates.html" target="_blank" rel="noopener">VER REMATES ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pf-wrap">
+      <div class="rem-admin">
+        <span class="pf-kicker is-coral">USO INTERNO</span>
+        <h1>ADMINISTRAR<br />REMATES.</h1>
+
+        <div class="admin-note" id="admin-mode" role="status">Cargando…</div>
+
+        <!-- ===== Login (solo en modo conectado) ===== -->
+        <form class="admin-box" id="admin-login-box" hidden>
+          <h2>Ingresá como administrador</h2>
+
+          <div class="admin-fields">
+            <div class="admin-field">
+              <label for="admin-email">Correo</label>
+              <input id="admin-email" type="email" autocomplete="username" required />
+            </div>
+            <div class="admin-field">
+              <label for="admin-password">Contraseña</label>
+              <input id="admin-password" type="password" autocomplete="current-password" required />
+            </div>
+          </div>
+
+          <div class="admin-actions">
+            <button class="pf-button" type="submit" id="admin-login">INGRESAR</button>
+          </div>
+          <p class="admin-message" id="admin-login-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <!-- ===== Editor del remate ===== -->
+        <form class="admin-box" id="admin-editor" hidden novalidate>
+          <div class="admin-fields">
+            <div class="admin-field">
+              <label for="admin-name">Nombre del mueble</label>
+              <input id="admin-name" maxlength="100" placeholder="Ej.: Ropero de pino · 3 puertas" required />
+            </div>
+
+            <div class="admin-field">
+              <label for="admin-desc">Descripción</label>
+              <textarea
+                id="admin-desc"
+                rows="3"
+                maxlength="800"
+                placeholder="Ej.: Una unidad disponible. Consultá condiciones por WhatsApp."
+              ></textarea>
+              <small><span id="admin-desc-count">0</span>/800 caracteres</small>
+            </div>
+
+            <div class="admin-row">
+              <div class="admin-field">
+                <label for="admin-base">Precio base (ARS)</label>
+                <input id="admin-base" type="number" min="1" step="1" inputmode="numeric" required />
+                <small id="admin-base-hint">&nbsp;</small>
+              </div>
+
+              <div class="admin-field">
+                <label for="admin-state">Estado</label>
+                <select id="admin-state">
+                  <option value="draft">Borrador · no se muestra</option>
+                  <option value="active">Publicado · permite enviar ofertas</option>
+                  <option value="closed">Cerrado</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="admin-field">
+              <label for="admin-photos">Fotos del mueble (hasta 5)</label>
+              <input id="admin-photos" class="admin-file" type="file" accept="image/*" multiple />
+              <label class="admin-drop" for="admin-photos" id="admin-drop">
+                <span aria-hidden="true">📷</span>
+                <strong>Elegí o arrastrá fotos</strong>
+                <small>Se achican automáticamente antes de guardarse.</small>
+              </label>
+              <small id="admin-photos-hint">
+                En modo conectado se suben a Firebase Storage. En demo se guardan solamente en este navegador.
+              </small>
+            </div>
+
+            <div class="admin-preview" id="admin-preview" aria-live="polite"></div>
+          </div>
+
+          <div class="admin-actions">
+            <button class="pf-button" type="submit" id="admin-save">GUARDAR REMATE</button>
+            <a class="pf-button ghost" href="remates.html" target="_blank" rel="noopener">VER PÁGINA ↗</a>
+            <button class="pf-button dark" type="button" id="admin-logout" hidden>SALIR</button>
+          </div>
+          <p class="admin-message" id="admin-message" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </main>
+
+    <script src="site.js" defer></script>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="remates.js"></script>
+  </body>
+</html>

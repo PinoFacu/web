@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'REEMPLAZAR_CON_UID_ADMIN';
+    }
+
+    // Solo se aceptan remates con la forma que guarda el admin.
+    function isValidAuction(data) {
+      return data.keys().hasOnly(['name', 'description', 'base', 'status', 'photos', 'updatedAt'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 100
+        && data.description is string
+        && data.description.size() <= 800
+        && data.base is int
+        && data.base > 0
+        && data.status in ['draft', 'active', 'closed']
+        && data.photos is list
+        && data.photos.size() <= 5
+        && data.updatedAt is int;
+    }
+
+    match /remates/actual {
+      // El público ve el remate publicado o cerrado; los borradores, solo el admin.
+      allow read: if isAdmin()
+        || (resource != null && resource.data.status != 'draft');
+
+      allow create, update: if isAdmin() && isValidAuction(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

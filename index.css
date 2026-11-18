@@ -422,3 +422,50 @@
     transition: none;
   }
 }
+/* ---------- Fotos con bordes redondeados ---------- */
+
+/* Foto principal (home.jpg) */
+.hero-photo img {
+  width: min(90%, 460px);
+  height: 475px;
+  object-fit: cover;
+  border-radius: 32px;
+  filter: none;
+  box-shadow: 0 27px 45px #5b2e2640;
+}
+
+/* Fotos de "¿Qué andás buscando?" */
+.choice-img {
+  padding: 14px 14px 0;
+  background: transparent !important;
+}
+
+.choice-img img {
+  padding: 0;
+  object-fit: cover;
+  border-radius: 22px;
+}
+
+/* Foto del local */
+.local-photo {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.local-photo img {
+  display: block;
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+@media (max-width: 760px) {
+  .hero-photo img {
+    height: 335px;
+  }
+
+  .local-photo img {
+    height: 300px;
+  }
+}

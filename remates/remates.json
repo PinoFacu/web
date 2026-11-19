@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-19T17:47:38.327Z",
+  "updatedAt": "2026-11-19T17:48:00.652Z",
   "items": [
     {
       "id": "mwnuf16jbqhe",
@@ -7,8 +7,12 @@
       "description": "Alto: 66 | Ancho: 40 | Prof .: 30",
       "base": 35000,
       "status": "active",
-      "photos": [],
-      "createdAt": "2026-11-19T17:47:38.327Z"
+      "photos": [
+        "remates/fotos/mwnuf16jbqhe-mwnufguo-1.webp",
+        "remates/fotos/mwnuf16jbqhe-mwnufguo-2.webp"
+      ],
+      "createdAt": "2026-11-19T17:47:38.327Z",
+      "updatedAt": "2026-11-19T17:48:00.652Z"
     },
     {
       "id": "mwnudkg7gcle",

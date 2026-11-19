@@ -1,6 +1,17 @@
 {
-  "updatedAt": "2026-11-18T21:02:30.095Z",
+  "updatedAt": "2026-11-19T17:46:31.463Z",
   "items": [
+    {
+      "id": "mwnudkg7gcle",
+      "name": "Mesa de luz asia de pino",
+      "description": "Alto: 62 | Ancho: 41 | Prof.: 31\nHecho en pino macizo.",
+      "base": 29000,
+      "status": "active",
+      "photos": [
+        "remates/fotos/mwnudkg7gcle-mwnudkg7-1.webp"
+      ],
+      "createdAt": "2026-11-19T17:46:31.462Z"
+    },
     {
       "id": "comedor",
       "name": "Juego de comedor",

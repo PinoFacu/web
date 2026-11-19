@@ -123,8 +123,8 @@
   overflow: hidden;
   display: grid;
   place-items: center;
-  min-height: 480px;
-  padding: 30px;
+  min-height: 320px;
+  padding: 18px;
   border-radius: 35px;
   background: radial-gradient(circle at 70% 20%, #f6d85d, #ffaf78 43%, #fc5d5c);
 }
@@ -144,12 +144,16 @@
   }
 }
 
+/* La foto se muestra entera (vertical u horizontal) y el recuadro se ajusta a ella */
 .rem-photo img {
   position: relative;
-  width: 100%;
-  height: 420px;
-  object-fit: contain;
-  filter: drop-shadow(0 20px 20px #5e332e55);
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 640px;
+  border-radius: 24px;
+  box-shadow: 0 18px 40px #5e332e40;
   transition: opacity 0.25s;
 }
 
@@ -673,14 +677,6 @@
     opacity: 0.3;
   }
 
-  .rem-photo {
-    min-height: 310px;
-  }
-
-  .rem-photo img {
-    height: 300px;
-  }
-
   .rem-panel,
   .admin-box {
     padding: 23px;
@@ -737,17 +733,6 @@
     900 clamp(35px, 4vw, 56px) / 1 Outfit,
     sans-serif;
   letter-spacing: -0.05em;
-}
-
-/* Las fotos llenan el recuadro con bordes redondeados (como en el inicio) */
-.rem-photo {
-  padding: 0;
-}
-
-.rem-photo img {
-  height: 480px;
-  object-fit: cover;
-  filter: none;
 }
 
 .rem-photo.is-empty::after {
@@ -906,7 +891,8 @@
 .admin-item-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  padding: 4px;
+  object-fit: contain;
 }
 
 .admin-item-info {
@@ -1014,10 +1000,6 @@ body.is-busy #new-item {
 }
 
 @media (max-width: 760px) {
-  .rem-photo img {
-    height: 320px;
-  }
-
   .admin-item {
     grid-template-columns: 64px 1fr;
   }
@@ -1046,4 +1028,208 @@ body.is-busy #new-item {
 #admin-base::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* =========================================================
+   Celular: todo más compacto para ver cada remate de un vistazo
+   ========================================================= */
+
+@media (max-width: 760px) {
+  /* Hero */
+  .rem-hero {
+    padding: 38px 0 70px;
+  }
+
+  .rem-hero h1 {
+    margin: 16px 0 12px;
+    font-size: clamp(54px, 17vw, 78px);
+  }
+
+  .rem-hero p {
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+
+  .rem-hammer {
+    top: 10%;
+    font-size: 90px;
+  }
+
+  /* Títulos de sección */
+  .pf-section .pf-sectiontitle {
+    margin: 8px 0 14px;
+    font-size: clamp(34px, 10.5vw, 48px);
+  }
+
+  /* Cómo funciona: tarjetas bajas, número al costado */
+  .rem-how {
+    gap: 10px;
+    margin: 16px 0 44px;
+  }
+
+  .rem-how article {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-radius: 20px;
+  }
+
+  .rem-how strong {
+    grid-row: span 2;
+    font-size: 32px;
+  }
+
+  .rem-how h3 {
+    margin: 0 0 2px;
+    font-size: 17px;
+  }
+
+  .rem-how p {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  /* Lista de remates */
+  .rem-list {
+    gap: 26px;
+    margin: 18px 0 44px;
+  }
+
+  .rem-item + .rem-item {
+    padding-top: 26px;
+  }
+
+  .rem-stage {
+    gap: 12px;
+  }
+
+  .rem-photo {
+    min-height: 0;
+    padding: 10px;
+    border-radius: 24px;
+  }
+
+  .rem-photo::before {
+    display: none;
+  }
+
+  .rem-photo img {
+    max-height: 55vh;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px #5e332e33;
+  }
+
+  .rem-thumbs {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .rem-thumbs button {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+  }
+
+  /* Panel de oferta */
+  .rem-panel {
+    padding: 18px;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px #0000000d;
+  }
+
+  .rem-badge {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .rem-panel .rem-name {
+    margin: 10px 0 6px;
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  .rem-panel .rem-desc {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .rem-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 12px;
+    margin: 14px 0;
+    padding: 12px 16px;
+    border-radius: 16px;
+  }
+
+  .rem-price span {
+    font-size: 10px;
+  }
+
+  .rem-price strong {
+    display: inline;
+    font-size: 28px;
+  }
+
+  .rem-field {
+    gap: 6px;
+    margin: 14px 0 10px;
+  }
+
+  .rem-field label {
+    font-size: 14px;
+  }
+
+  .rem-field small {
+    font-size: 12px;
+  }
+
+  .rem-input span {
+    padding-left: 12px;
+    font-size: 18px;
+  }
+
+  .rem-input input {
+    padding: 11px 12px 11px 6px;
+    font-size: 19px;
+  }
+
+  .rem-quick {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .rem-quick button {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .rem-send {
+    min-height: 46px;
+    padding: 12px 16px;
+  }
+
+  .rem-message {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .rem-notice {
+    margin-top: 14px;
+    padding: 16px;
+  }
+
+  .rem-notice strong {
+    font-size: 18px;
+  }
+
+  .rem-rules {
+    padding: 18px;
+    font-size: 13px;
+  }
 }

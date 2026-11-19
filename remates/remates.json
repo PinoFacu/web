@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-19T17:48:00.652Z",
+  "updatedAt": "2026-11-19T17:48:10.617Z",
   "items": [
     {
       "id": "mwnuf16jbqhe",
@@ -24,16 +24,6 @@
         "remates/fotos/mwnudkg7gcle-mwnudkg7-1.webp"
       ],
       "createdAt": "2026-11-19T17:46:31.462Z"
-    },
-    {
-      "id": "comedor",
-      "name": "Juego de comedor",
-      "description": "Remate de ejemplo. Editalo desde el admin o eliminalo.",
-      "base": 100000,
-      "status": "hidden",
-      "photos": [
-        "images/coemdor.jpg"
-      ]
     }
   ]
 }

@@ -1,6 +1,15 @@
 {
-  "updatedAt": "2026-11-19T17:46:31.463Z",
+  "updatedAt": "2026-11-19T17:47:38.327Z",
   "items": [
+    {
+      "id": "mwnuf16jbqhe",
+      "name": "Mesa de luz de melamina y pino",
+      "description": "Alto: 66 | Ancho: 40 | Prof .: 30",
+      "base": 35000,
+      "status": "active",
+      "photos": [],
+      "createdAt": "2026-11-19T17:47:38.327Z"
+    },
     {
       "id": "mwnudkg7gcle",
       "name": "Mesa de luz asia de pino",

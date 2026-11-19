@@ -422,13 +422,17 @@
     transition: none;
   }
 }
-/* ---------- Fotos con bordes redondeados ---------- */
+/* ---------- Fotos enteras con bordes redondeados ----------
+   Las fotos se ven completas (verticales u horizontales), sin recortes:
+   cada recuadro se adapta a la foto y le redondea las esquinas. */
 
 /* Foto principal (home.jpg) */
 .hero-photo img {
-  width: min(90%, 460px);
-  height: 475px;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 475px;
+  object-fit: contain;
   border-radius: 32px;
   filter: none;
   box-shadow: 0 27px 45px #5b2e2640;
@@ -436,36 +440,58 @@
 
 /* Fotos de "¿Qué andás buscando?" */
 .choice-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 14px 14px 0;
   background: transparent !important;
 }
 
 .choice-img img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
   padding: 0;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 22px;
 }
 
 /* Foto del local */
 .local-photo {
-  display: block;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 14px;
   overflow: hidden;
 }
 
 .local-photo img {
   display: block;
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 24px;
 }
 
 @media (max-width: 760px) {
   .hero-photo img {
-    height: 335px;
+    max-height: 360px;
+  }
+
+  .choice-img {
+    padding: 10px 10px 0;
+  }
+
+  .local-photo {
+    padding: 10px;
   }
 
   .local-photo img {
-    height: 300px;
+    max-height: 60vh;
+    border-radius: 18px;
   }
 }

@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
     />
     <link rel="stylesheet" href="style.css?v=5" />
-    <link rel="stylesheet" href="reventa.css?v=5" />
+    <link rel="stylesheet" href="reventa.css?v=6" />
   </head>
 
   <body>
@@ -168,8 +168,10 @@
       // Reventa · catálogo, pedido y envío por WhatsApp
       // =========================================================
 
-      // Si se completa, los productos se leen de una hoja publicada con Apps Script.
-      const APPS_SCRIPT_URL = "";
+      // Los productos y precios se leen de reventa/productos.json,
+      // que se edita desde admin-remates.html › Precios de reventa.
+      // Si ese archivo no carga, se usa la lista de respaldo de abajo.
+      const DATA_URL = "reventa/productos.json";
       const WHATSAPP_NUMBER = "542216013657";
       const CATEGORY_ORDER = ["CAMAS", "MUEBLES DE COCINA", "ROPEROS", "VESTIDORES"];
       const IMG = "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/";
@@ -301,17 +303,17 @@
 
       async function load() {
         try {
-          if (!APPS_SCRIPT_URL) throw new Error("Sin Apps Script configurado");
-          const response = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
+          // El parámetro ?t= evita que el navegador muestre precios viejos.
+          const response = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const rows = await response.json();
+          const data = await response.json();
+          const rows = Array.isArray(data) ? data : data.items || [];
           products = rows
-            .filter((row) => String(row.activo).toLowerCase() !== "false")
+            .filter((row) => row.active !== false && String(row.activo).toLowerCase() !== "false")
             .map(normalize)
             .filter((p) => p.name && Number.isFinite(p.price) && p.price > 0);
-          if (!products.length) throw new Error("La lista llegó vacía");
         } catch (error) {
-          if (APPS_SCRIPT_URL) console.warn("Se usan los productos de respaldo:", error);
+          console.warn("Se usan los productos de respaldo:", error);
           products = fallbackProducts;
         }
         render();
@@ -348,6 +350,12 @@
 
       function render() {
         const openIds = [...document.querySelectorAll(".category.open")].map((el) => el.id);
+
+        if (!products.length) {
+          $("categories").innerHTML =
+            '<p class="empty">En este momento no hay productos disponibles. Escribinos por WhatsApp.</p>';
+          return;
+        }
 
         $("categories").innerHTML = CATEGORY_ORDER.map((group) => {
           const list = products.filter((p) => p.group === group);

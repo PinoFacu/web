@@ -1233,3 +1233,236 @@ body.is-busy #new-item {
     font-size: 13px;
   }
 }
+
+/* =========================================================
+   Admin: pestañas y precios de reventa (v6)
+   ========================================================= */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Pestañas ---------- */
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 26px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-tablist {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f3f3f3;
+}
+
+.admin-tablist [role="tab"] {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.admin-tablist [role="tab"][aria-selected="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 3px 10px #0000001a;
+}
+
+/* ---------- Lista de precios ---------- */
+
+.admin-prices {
+  display: grid;
+  gap: 24px;
+}
+
+.admin-price-group h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--coral);
+}
+
+.admin-price {
+  display: grid;
+  grid-template-columns: 56px 1fr 170px auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid #eee;
+  border-radius: 18px;
+  background: #fff;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.admin-price .admin-item-thumb {
+  width: 56px;
+  height: 56px;
+}
+
+.admin-price.is-changed {
+  border-color: #f6b1b0;
+  background: #fff8f7;
+}
+
+.admin-price.is-off .admin-item-thumb,
+.admin-price.is-off .admin-item-info {
+  opacity: 0.45;
+}
+
+.admin-price .admin-item-info strong {
+  font-size: 17px;
+}
+
+.admin-price.is-changed .admin-price-before {
+  color: var(--coral-dark);
+  font-weight: 800;
+}
+
+.admin-price-input {
+  display: flex;
+  align-items: center;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.admin-price-input:focus-within {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 4px #fc5d5c22;
+}
+
+.admin-price-input:has([aria-invalid="true"]) {
+  border-color: #c33;
+}
+
+.admin-price-input > span[aria-hidden] {
+  padding-left: 12px;
+  font-weight: 900;
+  color: #999;
+}
+
+.admin-price-input input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px 10px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font:
+    900 18px Outfit,
+    sans-serif;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.admin-price-input input:focus {
+  outline: 0;
+}
+
+.admin-price-input input::-webkit-inner-spin-button,
+.admin-price-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.admin-price-visible {
+  font-size: 13px;
+}
+
+/* Barra de guardado: queda fija abajo mientras se edita */
+.admin-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 20px;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid #eee;
+  background: #ffffffee;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.admin-savebar .admin-message {
+  flex: 1 1 260px;
+  margin: 0;
+}
+
+.admin-savebar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .admin-tablist {
+    width: 100%;
+  }
+
+  .admin-tablist [role="tab"] {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .admin-tabs #logout {
+    margin-left: auto;
+  }
+
+  /* En celular: foto + nombre arriba; precio y "Visible" en la misma fila */
+  .admin-price {
+    grid-template-columns: 48px 1fr auto;
+    gap: 8px 12px;
+  }
+
+  .admin-price .admin-item-thumb {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-price .admin-item-info {
+    grid-column: 2 / -1;
+  }
+
+  .admin-price-input {
+    grid-column: 1 / 3;
+  }
+
+  .admin-savebar-actions {
+    width: 100%;
+  }
+
+  .admin-savebar-actions .pf-button {
+    flex: 1;
+  }
+}

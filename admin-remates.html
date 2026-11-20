@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
     />
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="remates.css" />
+    <link rel="stylesheet" href="remates.css?v=6" />
   </head>
 
   <body class="admin-page">
@@ -122,79 +122,114 @@
 
         <!-- ===== Panel ===== -->
         <section id="panel" hidden>
-          <div class="admin-toolbar">
-            <h2>Remates cargados</h2>
-            <div class="admin-toolbar-actions">
-              <button class="pf-button" type="button" id="new-item">+ NUEVO REMATE</button>
-              <button class="pf-button dark" type="button" id="logout">SALIR</button>
+          <div class="admin-tabs">
+            <div class="admin-tablist" role="tablist" aria-label="Secciones del admin">
+              <button type="button" role="tab" id="tab-remates" aria-controls="view-remates" aria-selected="true">
+                🔨 Remates
+              </button>
+              <button type="button" role="tab" id="tab-precios" aria-controls="view-precios" aria-selected="false">
+                🏷️ Precios de reventa
+              </button>
             </div>
+            <button class="admin-mini" type="button" id="logout">SALIR</button>
           </div>
 
-          <p class="admin-message" id="panel-msg" role="status" aria-live="polite"></p>
-          <div class="admin-list" id="item-list"></div>
-
-          <!-- Editor de un remate -->
-          <form class="admin-box admin-editor" id="editor" hidden novalidate>
-            <h2 id="editor-title">Nuevo remate</h2>
-
-            <div class="admin-fields">
-              <div class="admin-field">
-                <label for="admin-name">Nombre del mueble</label>
-                <input id="admin-name" maxlength="100" placeholder="Ej.: Juego de comedor" required />
+          <!-- ===== Pestaña: Remates ===== -->
+          <div id="view-remates" role="tabpanel" aria-labelledby="tab-remates">
+            <div class="admin-toolbar">
+              <h2>Remates cargados</h2>
+              <div class="admin-toolbar-actions">
+                <button class="pf-button" type="button" id="new-item">+ NUEVO REMATE</button>
               </div>
+            </div>
 
-              <div class="admin-field">
-                <label for="admin-desc">Descripción</label>
-                <textarea
-                  id="admin-desc"
-                  rows="3"
-                  maxlength="800"
-                  placeholder="Ej.: Mesa + 6 sillas de pino. Una unidad disponible."
-                ></textarea>
-                <small><span id="admin-desc-count">0</span>/800 caracteres</small>
-              </div>
+            <p class="admin-message" id="panel-msg" role="status" aria-live="polite"></p>
+            <div class="admin-list" id="item-list"></div>
 
-              <div class="admin-row">
+            <!-- Editor de un remate -->
+            <form class="admin-box admin-editor" id="editor" hidden novalidate>
+              <h2 id="editor-title">Nuevo remate</h2>
+
+              <div class="admin-fields">
                 <div class="admin-field">
-                  <label for="admin-base">Precio base (ARS)</label>
-                  <input id="admin-base" type="number" min="1" step="1" inputmode="numeric" required />
-                  <small id="admin-base-hint">&nbsp;</small>
+                  <label for="admin-name">Nombre del mueble</label>
+                  <input id="admin-name" maxlength="100" placeholder="Ej.: Juego de comedor" required />
                 </div>
 
                 <div class="admin-field">
-                  <label for="admin-state">Estado</label>
-                  <select id="admin-state">
-                    <option value="active">Publicado · recibe ofertas</option>
-                    <option value="closed">Cerrado · se ve pero no recibe ofertas</option>
-                    <option value="hidden">Oculto · no se ve en la web</option>
-                  </select>
+                  <label for="admin-desc">Descripción</label>
+                  <textarea
+                    id="admin-desc"
+                    rows="3"
+                    maxlength="800"
+                    placeholder="Ej.: Mesa + 6 sillas de pino. Una unidad disponible."
+                  ></textarea>
+                  <small><span id="admin-desc-count">0</span>/800 caracteres</small>
                 </div>
+
+                <div class="admin-row">
+                  <div class="admin-field">
+                    <label for="admin-base">Precio base (ARS)</label>
+                    <input id="admin-base" type="number" min="1" step="1" inputmode="numeric" required />
+                    <small id="admin-base-hint">&nbsp;</small>
+                  </div>
+
+                  <div class="admin-field">
+                    <label for="admin-state">Estado</label>
+                    <select id="admin-state">
+                      <option value="active">Publicado · recibe ofertas</option>
+                      <option value="closed">Cerrado · se ve pero no recibe ofertas</option>
+                      <option value="hidden">Oculto · no se ve en la web</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="admin-field">
+                  <label for="admin-photos">Fotos del mueble (hasta 5 · la primera es la portada)</label>
+                  <input id="admin-photos" class="admin-file" type="file" accept="image/*" multiple />
+                  <label class="admin-drop" for="admin-photos" id="admin-drop">
+                    <span aria-hidden="true">📷</span>
+                    <strong>Elegí o arrastrá fotos</strong>
+                    <small>Se achican automáticamente antes de subirse.</small>
+                  </label>
+                </div>
+
+                <div class="admin-preview" id="admin-preview" aria-live="polite"></div>
               </div>
 
-              <div class="admin-field">
-                <label for="admin-photos">Fotos del mueble (hasta 5 · la primera es la portada)</label>
-                <input id="admin-photos" class="admin-file" type="file" accept="image/*" multiple />
-                <label class="admin-drop" for="admin-photos" id="admin-drop">
-                  <span aria-hidden="true">📷</span>
-                  <strong>Elegí o arrastrá fotos</strong>
-                  <small>Se achican automáticamente antes de subirse.</small>
-                </label>
+              <div class="admin-actions">
+                <button class="pf-button" type="submit" id="admin-save">GUARDAR REMATE</button>
+                <button class="pf-button ghost" type="button" id="editor-cancel">CANCELAR</button>
               </div>
+              <p class="admin-message" id="editor-msg" role="status" aria-live="polite"></p>
+            </form>
+          </div>
 
-              <div class="admin-preview" id="admin-preview" aria-live="polite"></div>
+          <!-- ===== Pestaña: Precios de reventa ===== -->
+          <div id="view-precios" role="tabpanel" aria-labelledby="tab-precios" hidden>
+            <div class="admin-toolbar">
+              <h2>Precios de reventa</h2>
             </div>
+            <p class="admin-intro">
+              Cambiá el precio por unidad y tocá <strong>GUARDAR PRECIOS</strong>. Destildá “Visible” para sacar un
+              producto de la página de reventa sin borrarlo.
+            </p>
 
-            <div class="admin-actions">
-              <button class="pf-button" type="submit" id="admin-save">GUARDAR REMATE</button>
-              <button class="pf-button ghost" type="button" id="editor-cancel">CANCELAR</button>
+            <div class="admin-prices" id="price-list"></div>
+
+            <div class="admin-savebar">
+              <p class="admin-message" id="prices-msg" role="status" aria-live="polite"></p>
+              <div class="admin-savebar-actions">
+                <button class="pf-button ghost" type="button" id="reset-prices">DESHACER</button>
+                <button class="pf-button" type="button" id="save-prices">GUARDAR PRECIOS</button>
+              </div>
             </div>
-            <p class="admin-message" id="editor-msg" role="status" aria-live="polite"></p>
-          </form>
+          </div>
         </section>
       </div>
     </main>
 
     <script src="site.js" defer></script>
-    <script type="module" src="admin-remates.js"></script>
+    <script type="module" src="admin-remates.js?v=6"></script>
   </body>
 </html>

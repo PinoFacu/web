@@ -14,6 +14,8 @@ const GITHUB = {
 };
 
 const DATA_PATH = "remates/remates.json";
+const PRICES_PATH = "reventa/productos.json";
+const PRICE_GROUPS = ["CAMAS", "MUEBLES DE COCINA", "ROPEROS", "VESTIDORES"];
 const KEY_PATH = "remates/admin-key.json";
 const PHOTO_DIR = "remates/fotos";
 const MAX_PHOTOS = 5;
@@ -37,6 +39,8 @@ const state = {
   editingId: null, // null = remate nuevo
   photos: [], // [{ path, src, blob }] · blob = foto nueva pendiente de subir
   busy: false,
+  prices: [], // productos de reventa tal como están guardados
+  pricesLoaded: false,
 };
 
 /* ---------- Utilidades ---------- */
@@ -141,9 +145,9 @@ async function gh(path, { method = "GET", body, raw = false, token = state.token
   return raw ? response.text() : response.json();
 }
 
-async function readData(ref = GITHUB.branch) {
+async function readData(ref = GITHUB.branch, path = DATA_PATH) {
   try {
-    const text = await gh(`/contents/${DATA_PATH}?ref=${ref}`, { raw: true });
+    const text = await gh(`/contents/${path}?ref=${ref}`, { raw: true });
     const data = JSON.parse(text);
     return { ...data, items: Array.isArray(data.items) ? data.items : [] };
   } catch (error) {
@@ -154,12 +158,13 @@ async function readData(ref = GITHUB.branch) {
 
 /**
  * Hace UN commit con todos los cambios:
- * - change(data) modifica remates.json y puede devolver rutas de fotos a borrar.
+ * - change(data) modifica el JSON de `path` (por defecto remates.json) y puede
+ *   devolver rutas de fotos a borrar.
  * - newFiles: [{ path, base64 }] fotos nuevas.
  * - extraFiles: { ruta: textoCompleto } otros archivos de texto.
  * Si alguien guardó al mismo tiempo, reintenta una vez sobre la versión nueva.
  */
-async function commit({ message, change, newFiles = [], extraFiles = {} }) {
+async function commit({ message, change, path = DATA_PATH, newFiles = [], extraFiles = {} }) {
   // Las fotos se suben una sola vez como "blobs", antes del commit.
   const blobs = [];
   for (const [index, file] of newFiles.entries()) {
@@ -177,10 +182,10 @@ async function commit({ message, change, newFiles = [], extraFiles = {} }) {
     let data = null;
 
     if (change) {
-      data = await readData(headSha);
+      data = await readData(headSha, path);
       const toDelete = change(data) || [];
       data.updatedAt = new Date().toISOString();
-      tree.push({ path: DATA_PATH, mode: "100644", type: "blob", content: JSON.stringify(data, null, 2) + "\n" });
+      tree.push({ path, mode: "100644", type: "blob", content: JSON.stringify(data, null, 2) + "\n" });
       toDelete.filter(isRepoPhoto).forEach((path) => tree.push({ path, mode: "100644", type: "blob", sha: null }));
     }
 
@@ -312,8 +317,11 @@ async function setup(event) {
 }
 
 function logout() {
+  if (pricesDirty() && !confirm("Hay precios sin guardar. ¿Salir igual?")) return;
   forgetToken();
   closeEditor();
+  state.pricesLoaded = false;
+  showTab("remates");
   setMode("<strong>Sesión cerrada.</strong>");
   show("login");
   $("login-pass").focus();
@@ -706,6 +714,192 @@ async function saveItem(event) {
   }
 }
 
+/* ---------- Pestañas ---------- */
+
+function showTab(name) {
+  ["remates", "precios"].forEach((tab) => {
+    const active = tab === name;
+    $(`tab-${tab}`).setAttribute("aria-selected", String(active));
+    $(`view-${tab}`).hidden = !active;
+  });
+  if (name === "precios" && !state.pricesLoaded) loadPrices();
+}
+
+/* ---------- Precios de reventa ---------- */
+
+async function loadPrices() {
+  say("prices-msg", "Cargando precios…");
+  $("price-list").replaceChildren();
+  try {
+    const data = await readData(GITHUB.branch, PRICES_PATH);
+    state.prices = data.items;
+    state.pricesLoaded = true;
+    renderPrices();
+    say(
+      "prices-msg",
+      state.prices.length ? "" : "No se encontró reventa/productos.json en el repo. Subilo y recargá la página.",
+      state.prices.length ? "" : "error",
+    );
+  } catch (error) {
+    say("prices-msg", explain(error), "error");
+  }
+}
+
+function renderPrices() {
+  const list = $("price-list");
+  list.replaceChildren();
+
+  const groups = [
+    ...PRICE_GROUPS,
+    ...new Set(state.prices.map((p) => p.group).filter((g) => !PRICE_GROUPS.includes(g))),
+  ];
+
+  groups.forEach((group) => {
+    const items = state.prices.filter((p) => (p.group || "OTROS") === group);
+    if (!items.length) return;
+
+    const section = document.createElement("section");
+    section.className = "admin-price-group";
+    const title = document.createElement("h3");
+    title.textContent = group;
+    section.append(title);
+
+    items.forEach((product) => {
+      const row = document.createElement("div");
+      row.className = "admin-price";
+      row.dataset.id = product.id;
+
+      const thumb = document.createElement("div");
+      thumb.className = "admin-item-thumb";
+      if (product.img) {
+        const img = document.createElement("img");
+        img.src = photoURL(product.img);
+        img.alt = "";
+        img.loading = "lazy";
+        thumb.append(img);
+      }
+
+      const info = document.createElement("div");
+      info.className = "admin-item-info";
+      const name = document.createElement("strong");
+      name.textContent = product.name;
+      const meta = document.createElement("span");
+      meta.className = "admin-price-before";
+      meta.textContent = product.cat || "";
+      info.append(name, meta);
+
+      const priceLabel = document.createElement("label");
+      priceLabel.className = "admin-price-input";
+      const sr = document.createElement("span");
+      sr.className = "sr-only";
+      sr.textContent = `Precio de ${product.name}`;
+      const sign = document.createElement("span");
+      sign.textContent = "$";
+      sign.setAttribute("aria-hidden", "true");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "1";
+      input.step = "1";
+      input.inputMode = "numeric";
+      input.value = product.price;
+      input.dataset.field = "price";
+      priceLabel.append(sr, sign, input);
+
+      const visible = document.createElement("label");
+      visible.className = "admin-check admin-price-visible";
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = product.active !== false;
+      check.dataset.field = "active";
+      visible.append(check, document.createTextNode(" Visible"));
+
+      row.append(thumb, info, priceLabel, visible);
+      section.append(row);
+    });
+
+    list.append(section);
+  });
+
+  updatePriceState();
+}
+
+/** Lee los cambios de la pantalla: { id: { price, active } } solo de lo que cambió. */
+function readPriceChanges() {
+  const changes = {};
+  let invalid = 0;
+
+  document.querySelectorAll(".admin-price").forEach((row) => {
+    const product = state.prices.find((p) => p.id === row.dataset.id);
+    if (!product) return;
+
+    const input = row.querySelector('[data-field="price"]');
+    const price = Number(input.value);
+    const active = row.querySelector('[data-field="active"]').checked;
+    const valid = Number.isSafeInteger(price) && price > 0;
+    input.setAttribute("aria-invalid", String(!valid));
+    if (!valid) invalid++;
+
+    const priceChanged = valid && price !== product.price;
+    const activeChanged = active !== (product.active !== false);
+    row.classList.toggle("is-changed", priceChanged || activeChanged);
+    row.classList.toggle("is-off", !active);
+
+    const before = row.querySelector(".admin-price-before");
+    before.textContent = priceChanged ? `Antes: ${money(product.price)}` : product.cat || "";
+
+    if (priceChanged || activeChanged) changes[product.id] = { price: valid ? price : product.price, active };
+  });
+
+  return { changes, invalid };
+}
+
+function pricesDirty() {
+  return state.pricesLoaded && Object.keys(readPriceChanges().changes).length > 0;
+}
+
+function updatePriceState() {
+  const { changes, invalid } = readPriceChanges();
+  const count = Object.keys(changes).length;
+  $("save-prices").textContent = count ? `GUARDAR PRECIOS (${count})` : "GUARDAR PRECIOS";
+  $("save-prices").disabled = !count || invalid > 0;
+  $("reset-prices").hidden = !count && !invalid;
+  if (invalid) say("prices-msg", "Hay precios vacíos o con centavos. Corregilos para poder guardar.", "error");
+  else if ($("prices-msg").dataset.tone === "error" && state.pricesLoaded) say("prices-msg", "");
+}
+
+async function savePrices() {
+  if (state.busy) return;
+  const { changes, invalid } = readPriceChanges();
+  const count = Object.keys(changes).length;
+  if (invalid) return say("prices-msg", "Hay precios vacíos o con centavos. Corregilos para poder guardar.", "error");
+  if (!count) return say("prices-msg", "No hay cambios para guardar.");
+
+  state.busy = true;
+  $("save-prices").disabled = true;
+  say("prices-msg", "Guardando precios…");
+
+  try {
+    const data = await commit({
+      message: `Reventa: actualizar ${count} producto(s)`,
+      path: PRICES_PATH,
+      change: (data) => {
+        data.items.forEach((product) => {
+          const change = changes[product.id];
+          if (change) Object.assign(product, change);
+        });
+      },
+    });
+    state.prices = data.items;
+    renderPrices();
+    say("prices-msg", `✓ ${count} producto(s) actualizado(s). La web se actualiza en 1 o 2 minutos.`, "ok");
+  } catch (error) {
+    say("prices-msg", explain(error), "error");
+  } finally {
+    state.busy = false;
+    updatePriceState();
+  }
+}
+
 /* ---------- Eventos ---------- */
 
 function bindEvents() {
@@ -718,6 +912,16 @@ function bindEvents() {
   });
   $("setup-cancel").addEventListener("click", () => show("login"));
   $("logout").addEventListener("click", logout);
+
+  $("tab-remates").addEventListener("click", () => showTab("remates"));
+  $("tab-precios").addEventListener("click", () => showTab("precios"));
+  $("price-list").addEventListener("input", updatePriceState);
+  $("price-list").addEventListener("change", updatePriceState);
+  $("save-prices").addEventListener("click", savePrices);
+  $("reset-prices").addEventListener("click", () => {
+    renderPrices();
+    say("prices-msg", "Cambios descartados.");
+  });
 
   $("new-item").addEventListener("click", () => openEditor());
   $("editor").addEventListener("submit", saveItem);
@@ -747,7 +951,7 @@ function bindEvents() {
 
   // Aviso si se quiere cerrar la pestaña con un remate a medio guardar.
   window.addEventListener("beforeunload", (event) => {
-    if (state.busy) event.preventDefault();
+    if (state.busy || pricesDirty()) event.preventDefault();
   });
 }
 

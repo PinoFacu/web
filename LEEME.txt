@@ -79,3 +79,15 @@ LÍMITES
 La oferta se valida en el navegador antes de abrir WhatsApp. No hay registro
 de ofertas, cierre automático, adjudicación ni pagos online: Pino Facu recibe
 y gestiona las propuestas por WhatsApp.
+
+
+PRECIOS DE REVENTA (desde el admin)
+-----------------------------------
+- Los productos y precios de reventa están en reventa/productos.json.
+- En admin-remates.html › pestaña "Precios de reventa": cambiar el precio por
+  unidad y tocar GUARDAR PRECIOS. Destildar "Visible" saca el producto de la
+  página de reventa sin borrarlo.
+- Igual que los remates: cada guardado es un commit y la web se actualiza en
+  1 o 2 minutos.
+- Si reventa/productos.json no carga, reventa.html usa la lista de respaldo que
+  tiene adentro (con los precios originales).

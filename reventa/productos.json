@@ -1,5 +1,5 @@
 {
-  "updatedAt": null,
+  "updatedAt": "2026-11-21T00:23:28.667Z",
   "items": [
     {
       "id": "r80",
@@ -89,7 +89,30 @@
       "name": "Cucheta",
       "price": 87000,
       "active": true,
-      "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/CamaCucheta-DePino-4.png"
+      "img": "reventa/fotos/c-mwpnzwrx.webp",
+      "description": ""
+    }
+  ],
+  "categories": [
+    {
+      "id": "CAMAS",
+      "name": "CAMAS",
+      "min": 3
+    },
+    {
+      "id": "MUEBLES DE COCINA",
+      "name": "MUEBLES DE COCINA",
+      "min": 2
+    },
+    {
+      "id": "ROPEROS",
+      "name": "ROPEROS",
+      "min": 3
+    },
+    {
+      "id": "VESTIDORES",
+      "name": "VESTIDORES",
+      "min": 3
     }
   ]
 }

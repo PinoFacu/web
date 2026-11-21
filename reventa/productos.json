@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T00:29:27.577Z",
+  "updatedAt": "2026-11-21T00:30:31.629Z",
   "items": [
     {
       "id": "r80",
@@ -38,7 +38,8 @@
       "name": "Vestidor 1,20 m",
       "price": 115000,
       "active": true,
-      "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/Vestidor-de-pino-XLde%20120-2.png"
+      "img": "reventa/fotos/v120-mwpo8z27.webp",
+      "description": ""
     },
     {
       "id": "m80",

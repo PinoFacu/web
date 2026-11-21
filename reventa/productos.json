@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T00:23:28.667Z",
+  "updatedAt": "2026-11-21T00:24:10.682Z",
   "items": [
     {
       "id": "r80",
@@ -44,7 +44,8 @@
       "name": "Modular 80 cm",
       "price": 91000,
       "active": true,
-      "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/Modular-de80-depino.png"
+      "img": "reventa/fotos/m80-mwpo0th7.webp",
+      "description": ""
     },
     {
       "id": "m120",

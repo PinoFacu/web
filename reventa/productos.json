@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T00:27:57.590Z",
+  "updatedAt": "2026-11-21T00:28:13.444Z",
   "items": [
     {
       "id": "r80",
@@ -84,7 +84,8 @@
       "name": "Combo 1,60 m",
       "price": 175999,
       "active": true,
-      "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/BajoConAlacenayMesada.png"
+      "img": "reventa/fotos/b160-mwpo60sr.webp",
+      "description": ""
     },
     {
       "id": "c",

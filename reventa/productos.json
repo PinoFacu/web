@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T00:25:42.387Z",
+  "updatedAt": "2026-11-21T00:27:41.511Z",
   "items": [
     {
       "id": "r80",
@@ -15,7 +15,7 @@
       "group": "ROPEROS",
       "cat": "Roperos",
       "name": "Ropero 1,20 m",
-      "price": 114000,
+      "price": 129999,
       "active": true,
       "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/RoperoDePino-3Puertas-2.png"
     },
@@ -42,7 +42,7 @@
       "group": "MUEBLES DE COCINA",
       "cat": "Modulares",
       "name": "Modular 80 cm",
-      "price": 91000,
+      "price": 99999,
       "active": true,
       "img": "reventa/fotos/m80-mwpo0th7.webp",
       "description": ""
@@ -52,7 +52,7 @@
       "group": "MUEBLES DE COCINA",
       "cat": "Modulares",
       "name": "Modular 1,20 m",
-      "price": 119000,
+      "price": 129999,
       "active": true,
       "img": "reventa/fotos/m120-mwpo15rq.webp",
       "description": ""
@@ -72,7 +72,7 @@
       "group": "MUEBLES DE COCINA",
       "cat": "Bajo + alacena",
       "name": "Combo 1,40 m",
-      "price": 139000,
+      "price": 164999,
       "active": true,
       "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/BajoConAlacenayMesada.png"
     },
@@ -81,7 +81,7 @@
       "group": "MUEBLES DE COCINA",
       "cat": "Bajo + alacena",
       "name": "Combo 1,60 m",
-      "price": 149000,
+      "price": 175999,
       "active": true,
       "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/BajoConAlacenayMesada.png"
     },

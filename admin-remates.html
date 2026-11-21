@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
     />
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="remates.css?v=6" />
+    <link rel="stylesheet" href="remates.css?v=7" />
   </head>
 
   <body class="admin-page">
@@ -50,7 +50,7 @@
     <main class="pf-wrap">
       <div class="rem-admin">
         <span class="pf-kicker is-coral">USO INTERNO</span>
-        <h1>ADMINISTRAR<br />REMATES</h1>
+        <h1>ADMINISTRAR<br />PINO FACU</h1>
 
         <div class="admin-note" id="admin-mode" role="status">Cargando…</div>
 
@@ -128,7 +128,7 @@
                 🔨 Remates
               </button>
               <button type="button" role="tab" id="tab-precios" aria-controls="view-precios" aria-selected="false">
-                🏷️ Precios de reventa
+                🏷️ Reventa
               </button>
             </div>
             <button class="admin-mini" type="button" id="logout">SALIR</button>
@@ -205,15 +205,116 @@
             </form>
           </div>
 
-          <!-- ===== Pestaña: Precios de reventa ===== -->
+          <!-- ===== Pestaña: Reventa ===== -->
           <div id="view-precios" role="tabpanel" aria-labelledby="tab-precios" hidden>
-            <div class="admin-toolbar">
-              <h2>Precios de reventa</h2>
+            <!-- Categorías y compra mínima -->
+            <section class="admin-box admin-cats">
+              <h2>Categorías y compra mínima</h2>
+              <p class="admin-intro">
+                Cantidad mínima de unidades por producto en cada categoría. Se muestra en la página de reventa y no deja
+                pedir menos.
+              </p>
+
+              <div class="admin-cat-list" id="cat-list"></div>
+
+              <div class="admin-cat-new">
+                <input
+                  id="cat-new-name"
+                  maxlength="40"
+                  placeholder="Nueva categoría (ej.: MESAS)"
+                  aria-label="Nombre de la nueva categoría"
+                />
+                <label class="admin-cat-min">
+                  Mínimo
+                  <input id="cat-new-min" type="number" min="1" step="1" value="3" inputmode="numeric" />
+                  u.
+                </label>
+                <button class="admin-mini" type="button" id="cat-add">+ AGREGAR</button>
+              </div>
+
+              <div class="admin-actions">
+                <button class="pf-button" type="button" id="save-cats" disabled>GUARDAR CATEGORÍAS</button>
+                <button class="pf-button ghost" type="button" id="reset-cats" hidden>DESHACER</button>
+              </div>
+              <p class="admin-message" id="cats-msg" role="status" aria-live="polite"></p>
+            </section>
+
+            <!-- Productos -->
+            <div class="admin-toolbar admin-toolbar-spaced">
+              <h2>Productos de reventa</h2>
+              <div class="admin-toolbar-actions">
+                <button class="pf-button" type="button" id="new-product">+ NUEVO PRODUCTO</button>
+              </div>
             </div>
             <p class="admin-intro">
-              Cambiá el precio por unidad y tocá <strong>GUARDAR PRECIOS</strong>. Destildá “Visible” para sacar un
-              producto de la página de reventa sin borrarlo.
+              Cambiá precios rápido en la lista y tocá <strong>GUARDAR PRECIOS</strong>. Para cambiar la foto, los
+              textos o la categoría, tocá <strong>EDITAR</strong>. Destildá “Visible” para sacar un producto sin
+              borrarlo.
             </p>
+
+            <!-- Editor de un producto -->
+            <form class="admin-box admin-editor" id="product-editor" hidden novalidate>
+              <h2 id="product-editor-title">Nuevo producto</h2>
+
+              <div class="admin-fields">
+                <div class="admin-row">
+                  <div class="admin-field">
+                    <label for="product-name">Nombre</label>
+                    <input id="product-name" maxlength="80" placeholder="Ej.: Ropero 1,20 m" required />
+                  </div>
+                  <div class="admin-field">
+                    <label for="product-cat">Subtítulo</label>
+                    <input id="product-cat" maxlength="40" placeholder="Ej.: Roperos" />
+                    <small>Aparece arriba del nombre, en rojo.</small>
+                  </div>
+                </div>
+
+                <div class="admin-field">
+                  <label for="product-desc">Descripción (opcional)</label>
+                  <textarea
+                    id="product-desc"
+                    rows="2"
+                    maxlength="300"
+                    placeholder="Ej.: Alto 180 · Ancho 120 · 3 puertas"
+                  ></textarea>
+                </div>
+
+                <div class="admin-row">
+                  <div class="admin-field">
+                    <label for="product-group">Categoría</label>
+                    <select id="product-group"></select>
+                    <small>Define la compra mínima.</small>
+                  </div>
+                  <div class="admin-field">
+                    <label for="product-price">Precio de reventa por unidad (ARS)</label>
+                    <input id="product-price" type="number" min="1" step="1" inputmode="numeric" required />
+                  </div>
+                </div>
+
+                <label class="admin-check">
+                  <input type="checkbox" id="product-active" checked />
+                  Visible en la página de reventa
+                </label>
+
+                <div class="admin-field">
+                  <label for="product-photo">Foto</label>
+                  <input id="product-photo" class="admin-file" type="file" accept="image/*" />
+                  <label class="admin-drop" for="product-photo" id="product-drop">
+                    <span aria-hidden="true">📷</span>
+                    <strong>Elegí o arrastrá la foto</strong>
+                    <small>Se achica automáticamente antes de subirse.</small>
+                  </label>
+                </div>
+
+                <div class="admin-preview" id="product-preview" aria-live="polite"></div>
+              </div>
+
+              <div class="admin-actions">
+                <button class="pf-button" type="submit" id="product-save">GUARDAR PRODUCTO</button>
+                <button class="pf-button ghost" type="button" id="product-cancel">CANCELAR</button>
+              </div>
+              <p class="admin-message" id="product-msg" role="status" aria-live="polite"></p>
+            </form>
 
             <div class="admin-prices" id="price-list"></div>
 
@@ -230,6 +331,6 @@
     </main>
 
     <script src="site.js" defer></script>
-    <script type="module" src="admin-remates.js?v=6"></script>
+    <script type="module" src="admin-remates.js?v=7"></script>
   </body>
 </html>

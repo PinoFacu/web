@@ -682,3 +682,12 @@ body.no-scroll {
     animation: none;
   }
 }
+
+/* Descripción opcional del producto (se carga desde el admin) */
+.desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+  white-space: pre-line;
+}

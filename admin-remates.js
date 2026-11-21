@@ -15,7 +15,7 @@ const GITHUB = {
 
 const DATA_PATH = "remates/remates.json";
 const PRICES_PATH = "reventa/productos.json";
-const PRICE_GROUPS = ["CAMAS", "MUEBLES DE COCINA", "ROPEROS", "VESTIDORES"];
+const REVENTA_PHOTO_DIR = "reventa/fotos";
 const KEY_PATH = "remates/admin-key.json";
 const PHOTO_DIR = "remates/fotos";
 const MAX_PHOTOS = 5;
@@ -40,7 +40,11 @@ const state = {
   photos: [], // [{ path, src, blob }] · blob = foto nueva pendiente de subir
   busy: false,
   prices: [], // productos de reventa tal como están guardados
+  categories: [], // categorías de reventa guardadas: [{ id, name, min }]
+  catDraft: [], // categorías mientras se editan
   pricesLoaded: false,
+  editingProductId: null, // null = producto nuevo
+  productPhoto: null, // { path, src, blob }
 };
 
 /* ---------- Utilidades ---------- */
@@ -73,7 +77,8 @@ function photoURL(path) {
   return /^(https?:|blob:|data:)/.test(path) ? path : `${RAW}/${path}`;
 }
 
-const isRepoPhoto = (path) => path.startsWith(`${PHOTO_DIR}/`);
+// Solo se borran fotos subidas por el admin (nunca imágenes de otros lados).
+const isRepoPhoto = (path) => path.startsWith(`${PHOTO_DIR}/`) || path.startsWith(`${REVENTA_PHOTO_DIR}/`);
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* ---------- Cifrado de la clave de GitHub ---------- */
@@ -164,11 +169,11 @@ async function readData(ref = GITHUB.branch, path = DATA_PATH) {
  * - extraFiles: { ruta: textoCompleto } otros archivos de texto.
  * Si alguien guardó al mismo tiempo, reintenta una vez sobre la versión nueva.
  */
-async function commit({ message, change, path = DATA_PATH, newFiles = [], extraFiles = {} }) {
+async function commit({ message, change, path = DATA_PATH, newFiles = [], extraFiles = {}, msgId = "editor-msg" }) {
   // Las fotos se suben una sola vez como "blobs", antes del commit.
   const blobs = [];
   for (const [index, file] of newFiles.entries()) {
-    say("editor-msg", `Subiendo foto ${index + 1} de ${newFiles.length}…`);
+    say(msgId, `Subiendo foto ${index + 1} de ${newFiles.length}…`);
     const blob = await gh("/git/blobs", { method: "POST", body: { content: file.base64, encoding: "base64" } });
     blobs.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
   }
@@ -317,9 +322,10 @@ async function setup(event) {
 }
 
 function logout() {
-  if (pricesDirty() && !confirm("Hay precios sin guardar. ¿Salir igual?")) return;
+  if (pricesDirty() && !confirm("Hay cambios de reventa sin guardar. ¿Salir igual?")) return;
   forgetToken();
   closeEditor();
+  closeProductEditor();
   state.pricesLoaded = false;
   showTab("remates");
   setMode("<strong>Sesión cerrada.</strong>");
@@ -725,105 +731,303 @@ function showTab(name) {
   if (name === "precios" && !state.pricesLoaded) loadPrices();
 }
 
-/* ---------- Precios de reventa ---------- */
+/* =========================================================
+   REVENTA: categorías (compra mínima) y productos
+   Todo se guarda en reventa/productos.json
+   ========================================================= */
+
+const DEFAULT_CATEGORIES = [
+  { id: "CAMAS", name: "CAMAS", min: 3 },
+  { id: "MUEBLES DE COCINA", name: "MUEBLES DE COCINA", min: 2 },
+  { id: "ROPEROS", name: "ROPEROS", min: 3 },
+  { id: "VESTIDORES", name: "VESTIDORES", min: 3 },
+];
+
+/** Devuelve las categorías guardadas o, si el archivo todavía no las tiene, las de siempre. */
+function categoriesFrom(data) {
+  const list = Array.isArray(data.categories) && data.categories.length ? data.categories : DEFAULT_CATEGORIES;
+  const clean = list.map((c) => ({
+    id: String(c.id || c.name).trim(),
+    name: String(c.name || c.id).trim(),
+    min: Math.max(1, parseInt(c.min, 10) || 3),
+  }));
+  // Si hay productos con una categoría que no está en la lista, se agrega para no perderlos.
+  (data.items || []).forEach((item) => {
+    if (item.group && !clean.some((c) => c.id === item.group)) clean.push({ id: item.group, name: item.group, min: 3 });
+  });
+  return clean;
+}
+
+const productsInCategory = (id) => state.prices.filter((p) => p.group === id).length;
 
 async function loadPrices() {
-  say("prices-msg", "Cargando precios…");
+  say("prices-msg", "Cargando productos…");
   $("price-list").replaceChildren();
   try {
     const data = await readData(GITHUB.branch, PRICES_PATH);
-    state.prices = data.items;
+    applyReventaData(data);
     state.pricesLoaded = true;
-    renderPrices();
-    say(
-      "prices-msg",
-      state.prices.length ? "" : "No se encontró reventa/productos.json en el repo. Subilo y recargá la página.",
-      state.prices.length ? "" : "error",
-    );
+    say("prices-msg", "");
   } catch (error) {
     say("prices-msg", explain(error), "error");
   }
 }
 
+function applyReventaData(data) {
+  state.prices = data.items;
+  state.categories = categoriesFrom(data);
+  state.catDraft = state.categories.map((c) => ({ ...c }));
+  renderCategories();
+  renderPrices();
+  fillGroupSelect();
+}
+
+/* ---------- Categorías y compra mínima ---------- */
+
+function renderCategories() {
+  const list = $("cat-list");
+  list.replaceChildren();
+
+  state.catDraft.forEach((category, index) => {
+    const row = document.createElement("div");
+    row.className = "admin-cat";
+
+    const name = document.createElement("input");
+    name.value = category.name;
+    name.maxLength = 40;
+    name.setAttribute("aria-label", "Nombre de la categoría");
+    name.addEventListener("input", () => {
+      category.name = name.value.toUpperCase();
+      updateCatState();
+    });
+    name.addEventListener("blur", () => (name.value = category.name.trim()));
+
+    const minLabel = document.createElement("label");
+    minLabel.className = "admin-cat-min";
+    const min = document.createElement("input");
+    min.type = "number";
+    min.min = "1";
+    min.step = "1";
+    min.inputMode = "numeric";
+    min.value = category.min;
+    min.addEventListener("input", () => {
+      category.min = Number(min.value);
+      updateCatState();
+    });
+    minLabel.append("Mínimo", min, "u.");
+
+    const count = productsInCategory(category.id);
+    const info = document.createElement("span");
+    info.className = "admin-cat-count";
+    info.textContent = category.isNew ? "nueva" : `${count} producto${count === 1 ? "" : "s"}`;
+
+    const actions = document.createElement("div");
+    actions.className = "admin-item-actions";
+
+    if (index > 0) {
+      const up = document.createElement("button");
+      up.type = "button";
+      up.className = "admin-mini";
+      up.textContent = "↑";
+      up.setAttribute("aria-label", `Subir ${category.name}`);
+      up.addEventListener("click", () => {
+        state.catDraft.splice(index - 1, 0, ...state.catDraft.splice(index, 1));
+        renderCategories();
+      });
+      actions.append(up);
+    }
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "admin-mini danger";
+    remove.textContent = "✕";
+    remove.setAttribute("aria-label", `Quitar ${category.name}`);
+    remove.disabled = count > 0;
+    remove.title = count > 0 ? "Tiene productos: pasalos a otra categoría o eliminalos primero" : "Quitar categoría";
+    remove.addEventListener("click", () => {
+      state.catDraft.splice(index, 1);
+      renderCategories();
+    });
+    actions.append(remove);
+
+    row.append(name, minLabel, info, actions);
+    list.append(row);
+  });
+
+  updateCatState();
+}
+
+function catDraftProblems() {
+  const names = state.catDraft.map((c) => c.name.trim());
+  if (names.some((n) => !n)) return "Hay una categoría sin nombre.";
+  if (new Set(names).size !== names.length) return "Hay dos categorías con el mismo nombre.";
+  if (state.catDraft.some((c) => !Number.isSafeInteger(c.min) || c.min < 1))
+    return "El mínimo tiene que ser un número entero, de 1 o más.";
+  return "";
+}
+
+function catsDirty() {
+  const clean = (list) => JSON.stringify(list.map(({ id, name, min }) => ({ id, name: name.trim(), min })));
+  return state.pricesLoaded && clean(state.catDraft) !== clean(state.categories);
+}
+
+function updateCatState() {
+  const problem = catDraftProblems();
+  const dirty = catsDirty();
+  $("save-cats").disabled = !dirty || Boolean(problem);
+  $("reset-cats").hidden = !dirty;
+  if (problem) say("cats-msg", problem, "error");
+  else if ($("cats-msg").dataset.tone === "error") say("cats-msg", "");
+}
+
+function addCategory() {
+  const name = $("cat-new-name").value.trim().toUpperCase();
+  const min = Number($("cat-new-min").value);
+  if (!name) return say("cats-msg", "Escribí el nombre de la nueva categoría.", "error");
+  if (!Number.isSafeInteger(min) || min < 1) return say("cats-msg", "El mínimo tiene que ser 1 o más.", "error");
+  if (state.catDraft.some((c) => c.name.trim() === name || c.id === name))
+    return say("cats-msg", "Ya existe una categoría con ese nombre.", "error");
+
+  state.catDraft.push({ id: name, name, min, isNew: true });
+  $("cat-new-name").value = "";
+  $("cat-new-min").value = 3;
+  renderCategories();
+  say("cats-msg", `"${name}" agregada. Tocá GUARDAR CATEGORÍAS para confirmarla.`);
+}
+
+async function saveCategories() {
+  if (state.busy) return;
+  const problem = catDraftProblems();
+  if (problem) return say("cats-msg", problem, "error");
+
+  const categories = state.catDraft.map(({ id, name, min }) => ({ id, name: name.trim(), min }));
+
+  state.busy = true;
+  $("save-cats").disabled = true;
+  say("cats-msg", "Guardando categorías…");
+  try {
+    const data = await commit({
+      message: "Reventa: actualizar categorías y mínimos",
+      path: PRICES_PATH,
+      change: (data) => {
+        const used = categories.map((c) => c.id);
+        const orphan = (data.items || []).find((item) => !used.includes(item.group));
+        if (orphan)
+          throw new Error(`"${orphan.name}" usa una categoría que querés quitar. Cambiale la categoría primero.`);
+        data.categories = categories;
+      },
+    });
+    applyReventaData(data);
+    say("cats-msg", "✓ Categorías guardadas. La web se actualiza en 1 o 2 minutos.", "ok");
+  } catch (error) {
+    say("cats-msg", error.status ? explain(error) : error.message, "error");
+  } finally {
+    state.busy = false;
+    updateCatState();
+  }
+}
+
+/* ---------- Lista de productos (con precio rápido) ---------- */
+
 function renderPrices() {
   const list = $("price-list");
   list.replaceChildren();
 
-  const groups = [
-    ...PRICE_GROUPS,
-    ...new Set(state.prices.map((p) => p.group).filter((g) => !PRICE_GROUPS.includes(g))),
-  ];
+  if (!state.prices.length) {
+    const empty = document.createElement("p");
+    empty.className = "admin-empty";
+    empty.textContent = "Todavía no hay productos. Tocá “+ NUEVO PRODUCTO” para cargar el primero.";
+    list.append(empty);
+  }
 
-  groups.forEach((group) => {
-    const items = state.prices.filter((p) => (p.group || "OTROS") === group);
+  state.categories.forEach((category) => {
+    const items = state.prices.filter((p) => p.group === category.id);
     if (!items.length) return;
 
     const section = document.createElement("section");
     section.className = "admin-price-group";
     const title = document.createElement("h3");
-    title.textContent = group;
+    title.textContent = `${category.name} · mínimo ${category.min} u.`;
     section.append(title);
 
-    items.forEach((product) => {
-      const row = document.createElement("div");
-      row.className = "admin-price";
-      row.dataset.id = product.id;
-
-      const thumb = document.createElement("div");
-      thumb.className = "admin-item-thumb";
-      if (product.img) {
-        const img = document.createElement("img");
-        img.src = photoURL(product.img);
-        img.alt = "";
-        img.loading = "lazy";
-        thumb.append(img);
-      }
-
-      const info = document.createElement("div");
-      info.className = "admin-item-info";
-      const name = document.createElement("strong");
-      name.textContent = product.name;
-      const meta = document.createElement("span");
-      meta.className = "admin-price-before";
-      meta.textContent = product.cat || "";
-      info.append(name, meta);
-
-      const priceLabel = document.createElement("label");
-      priceLabel.className = "admin-price-input";
-      const sr = document.createElement("span");
-      sr.className = "sr-only";
-      sr.textContent = `Precio de ${product.name}`;
-      const sign = document.createElement("span");
-      sign.textContent = "$";
-      sign.setAttribute("aria-hidden", "true");
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = "1";
-      input.step = "1";
-      input.inputMode = "numeric";
-      input.value = product.price;
-      input.dataset.field = "price";
-      priceLabel.append(sr, sign, input);
-
-      const visible = document.createElement("label");
-      visible.className = "admin-check admin-price-visible";
-      const check = document.createElement("input");
-      check.type = "checkbox";
-      check.checked = product.active !== false;
-      check.dataset.field = "active";
-      visible.append(check, document.createTextNode(" Visible"));
-
-      row.append(thumb, info, priceLabel, visible);
-      section.append(row);
-    });
-
+    items.forEach((product, index) => section.append(priceRow(product, index > 0)));
     list.append(section);
   });
 
   updatePriceState();
 }
 
-/** Lee los cambios de la pantalla: { id: { price, active } } solo de lo que cambió. */
+function priceRow(product, canMoveUp) {
+  const row = document.createElement("div");
+  row.className = "admin-price";
+  row.dataset.id = product.id;
+
+  const thumb = document.createElement("div");
+  thumb.className = "admin-item-thumb";
+  if (product.img) {
+    const img = document.createElement("img");
+    img.src = photoURL(product.img);
+    img.alt = "";
+    img.loading = "lazy";
+    thumb.append(img);
+  } else {
+    thumb.textContent = "📷";
+  }
+
+  const info = document.createElement("div");
+  info.className = "admin-item-info";
+  const name = document.createElement("strong");
+  name.textContent = product.name;
+  const meta = document.createElement("span");
+  meta.className = "admin-price-before";
+  meta.textContent = product.cat || "";
+  info.append(name, meta);
+
+  const priceLabel = document.createElement("label");
+  priceLabel.className = "admin-price-input";
+  const sr = document.createElement("span");
+  sr.className = "sr-only";
+  sr.textContent = `Precio de ${product.name}`;
+  const sign = document.createElement("span");
+  sign.textContent = "$";
+  sign.setAttribute("aria-hidden", "true");
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "1";
+  input.step = "1";
+  input.inputMode = "numeric";
+  input.value = product.price;
+  input.dataset.field = "price";
+  priceLabel.append(sr, sign, input);
+
+  const visible = document.createElement("label");
+  visible.className = "admin-check admin-price-visible";
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.checked = product.active !== false;
+  check.dataset.field = "active";
+  visible.append(check, document.createTextNode(" Visible"));
+
+  const actions = document.createElement("div");
+  actions.className = "admin-item-actions";
+  const button = (text, className, handler, label) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = className;
+    b.textContent = text;
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("click", handler);
+    actions.append(b);
+  };
+  if (canMoveUp) button("↑", "admin-mini", () => moveProduct(product), `Subir ${product.name}`);
+  button("EDITAR", "admin-mini", () => openProductEditor(product));
+  button("✕", "admin-mini danger", () => removeProduct(product), `Eliminar ${product.name}`);
+
+  row.append(thumb, info, priceLabel, visible, actions);
+  return row;
+}
+
+/** Lee los cambios rápidos de la pantalla: { id: { price, active } } solo de lo que cambió. */
 function readPriceChanges() {
   const changes = {};
   let invalid = 0;
@@ -854,7 +1058,7 @@ function readPriceChanges() {
 }
 
 function pricesDirty() {
-  return state.pricesLoaded && Object.keys(readPriceChanges().changes).length > 0;
+  return state.pricesLoaded && (Object.keys(readPriceChanges().changes).length > 0 || catsDirty());
 }
 
 function updatePriceState() {
@@ -867,36 +1071,261 @@ function updatePriceState() {
   else if ($("prices-msg").dataset.tone === "error" && state.pricesLoaded) say("prices-msg", "");
 }
 
-async function savePrices() {
-  if (state.busy) return;
+/** Antes de una acción que vuelve a dibujar la lista, avisa si hay precios sin guardar. */
+function confirmDiscardQuickEdits() {
+  const pending = Object.keys(readPriceChanges().changes).length;
+  return !pending || confirm("Hay precios sin guardar en la lista. Si seguís, se descartan. ¿Continuar?");
+}
+
+async function runReventaAction(text, action, okText) {
+  if (state.busy) return false;
+  state.busy = true;
+  document.body.classList.add("is-busy");
+  say("prices-msg", text);
+  try {
+    const data = await action();
+    if (data) applyReventaData(data);
+    say("prices-msg", okText || "✓ Listo. La web se actualiza en 1 o 2 minutos.", "ok");
+    return true;
+  } catch (error) {
+    say("prices-msg", error.status ? explain(error) : error.message, "error");
+    return false;
+  } finally {
+    state.busy = false;
+    document.body.classList.remove("is-busy");
+    updatePriceState();
+  }
+}
+
+function savePrices() {
   const { changes, invalid } = readPriceChanges();
   const count = Object.keys(changes).length;
   if (invalid) return say("prices-msg", "Hay precios vacíos o con centavos. Corregilos para poder guardar.", "error");
   if (!count) return say("prices-msg", "No hay cambios para guardar.");
 
-  state.busy = true;
-  $("save-prices").disabled = true;
-  say("prices-msg", "Guardando precios…");
+  runReventaAction(
+    "Guardando precios…",
+    () =>
+      commit({
+        message: `Reventa: actualizar ${count} producto(s)`,
+        path: PRICES_PATH,
+        change: (data) => {
+          if (!data.categories) data.categories = categoriesFrom(data);
+          data.items.forEach((product) => {
+            if (changes[product.id]) Object.assign(product, changes[product.id]);
+          });
+        },
+      }),
+    `✓ ${count} producto(s) actualizado(s). La web se actualiza en 1 o 2 minutos.`,
+  );
+}
 
-  try {
-    const data = await commit({
-      message: `Reventa: actualizar ${count} producto(s)`,
+function moveProduct(product) {
+  if (!confirmDiscardQuickEdits()) return;
+  runReventaAction("Reordenando…", () =>
+    commit({
+      message: "Reventa: cambiar el orden",
       path: PRICES_PATH,
       change: (data) => {
-        data.items.forEach((product) => {
-          const change = changes[product.id];
-          if (change) Object.assign(product, change);
-        });
+        if (!data.categories) data.categories = categoriesFrom(data);
+        const index = data.items.findIndex((x) => x.id === product.id);
+        if (index < 0) return;
+        // Se ubica antes del producto anterior de la misma categoría.
+        let target = index - 1;
+        while (target >= 0 && data.items[target].group !== product.group) target--;
+        if (target < 0) return;
+        const [moved] = data.items.splice(index, 1);
+        data.items.splice(target, 0, moved);
+      },
+    }),
+  );
+}
+
+function removeProduct(product) {
+  const ok = confirm(
+    `¿Eliminar "${product.name}" de reventa?\n\nSe saca de la web y se borra su foto. No se puede deshacer.`,
+  );
+  if (!ok || !confirmDiscardQuickEdits()) return;
+  if (state.editingProductId === product.id) closeProductEditor();
+
+  runReventaAction(
+    "Eliminando…",
+    () =>
+      commit({
+        message: `Reventa: eliminar "${product.name}"`,
+        path: PRICES_PATH,
+        change: (data) => {
+          if (!data.categories) data.categories = categoriesFrom(data);
+          const index = data.items.findIndex((x) => x.id === product.id);
+          if (index < 0) return [];
+          const [removed] = data.items.splice(index, 1);
+          return removed.img ? [removed.img] : [];
+        },
+      }),
+    `✓ "${product.name}" eliminado.`,
+  );
+}
+
+/* ---------- Editor de producto ---------- */
+
+function fillGroupSelect() {
+  const select = $("product-group");
+  const current = select.value;
+  select.replaceChildren(
+    ...state.categories.map((c) => {
+      const option = document.createElement("option");
+      option.value = c.id;
+      option.textContent = `${c.name} · mínimo ${c.min} u.`;
+      return option;
+    }),
+  );
+  if (state.categories.some((c) => c.id === current)) select.value = current;
+}
+
+function openProductEditor(product = null) {
+  if (!confirmDiscardQuickEdits()) return;
+  renderPrices(); // descarta cambios rápidos sin guardar
+
+  releaseProductPhoto();
+  state.editingProductId = product?.id || null;
+  state.productPhoto = product?.img ? { path: product.img, src: photoURL(product.img), blob: null } : null;
+
+  $("product-editor-title").textContent = product ? `Editar: ${product.name}` : "Nuevo producto";
+  $("product-name").value = product?.name || "";
+  $("product-cat").value = product?.cat || "";
+  $("product-desc").value = product?.description || "";
+  $("product-price").value = product?.price || "";
+  $("product-active").checked = product ? product.active !== false : true;
+  fillGroupSelect();
+  if (product?.group) $("product-group").value = product.group;
+  ["product-name", "product-price"].forEach((id) => $(id).removeAttribute("aria-invalid"));
+
+  say("product-msg", "");
+  renderProductPhoto();
+  $("product-editor").hidden = false;
+  $("product-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  $("product-name").focus({ preventScroll: true });
+}
+
+function closeProductEditor() {
+  releaseProductPhoto();
+  state.productPhoto = null;
+  state.editingProductId = null;
+  $("product-editor").hidden = true;
+}
+
+function releaseProductPhoto() {
+  if (state.productPhoto?.src.startsWith("blob:")) URL.revokeObjectURL(state.productPhoto.src);
+}
+
+function renderProductPhoto() {
+  const box = $("product-preview");
+  box.replaceChildren();
+  const photo = state.productPhoto;
+  $("product-drop").querySelector("strong").textContent = photo ? "Cambiar foto" : "Elegí o arrastrá la foto";
+
+  if (!photo) return;
+
+  const figure = document.createElement("figure");
+  figure.className = "admin-photo";
+  const img = document.createElement("img");
+  img.src = photo.src;
+  img.alt = "Foto del producto";
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.textContent = "×";
+  remove.setAttribute("aria-label", "Quitar foto");
+  remove.addEventListener("click", () => {
+    releaseProductPhoto();
+    state.productPhoto = null;
+    renderProductPhoto();
+  });
+  figure.append(img, remove);
+  box.append(figure);
+}
+
+async function setProductPhoto(fileList) {
+  const file = [...fileList].find((f) => f.type.startsWith("image/"));
+  if (!file) return say("product-msg", "Elegí un archivo de imagen (JPG, PNG, WebP…).", "error");
+
+  say("product-msg", "Preparando foto…");
+  try {
+    const compressed = await compressImage(file, 1400).catch(() => null);
+    const blob = compressed && compressed.size < file.size ? compressed : file;
+    if (blob.size > 8 * 1024 * 1024) throw new Error("La foto es demasiado pesada. Probá con otra.");
+    releaseProductPhoto();
+    state.productPhoto = { path: null, src: URL.createObjectURL(blob), blob };
+    renderProductPhoto();
+    say("product-msg", "Foto lista. Se sube al guardar.");
+  } catch (error) {
+    say("product-msg", error.message, "error");
+  }
+}
+
+async function saveProduct(event) {
+  event.preventDefault();
+  if (state.busy) return;
+
+  const name = $("product-name").value.trim();
+  const cat = $("product-cat").value.trim();
+  const description = $("product-desc").value.trim();
+  const group = $("product-group").value;
+  const price = Number($("product-price").value);
+  const active = $("product-active").checked;
+
+  const validPrice = Number.isSafeInteger(price) && price > 0;
+  $("product-name").setAttribute("aria-invalid", String(!name));
+  $("product-price").setAttribute("aria-invalid", String(!validPrice));
+  if (!name) return say("product-msg", "Completá el nombre del producto.", "error");
+  if (!validPrice) return say("product-msg", "El precio tiene que ser un número entero mayor que cero.", "error");
+  if (!group) return say("product-msg", "Elegí una categoría.", "error");
+
+  const id = state.editingProductId || `p${newId()}`;
+  const photo = state.productPhoto;
+
+  state.busy = true;
+  $("product-save").disabled = true;
+  $("product-save").textContent = "GUARDANDO…";
+  say("product-msg", "Guardando…");
+
+  try {
+    const newFiles = [];
+    let img = photo?.path || "";
+    if (photo?.blob) {
+      const type = photo.blob.type || "image/jpeg";
+      img = `${REVENTA_PHOTO_DIR}/${id}-${Date.now().toString(36)}.${extensionFor(type)}`;
+      newFiles.push({ path: img, base64: await blobToBase64(photo.blob) });
+    }
+
+    const verb = state.editingProductId ? "editar" : "agregar";
+    const data = await commit({
+      message: `Reventa: ${verb} "${name}"`,
+      path: PRICES_PATH,
+      newFiles,
+      msgId: "product-msg",
+      change: (data) => {
+        if (!data.categories) data.categories = categoriesFrom(data);
+        const record = { id, group, cat, name, description, price, active, img };
+        const existing = data.items.find((x) => x.id === id);
+        if (existing) {
+          const oldImg = existing.img;
+          Object.assign(existing, record);
+          return oldImg && oldImg !== img ? [oldImg] : []; // foto reemplazada: se borra
+        }
+        data.items.push(record);
+        return [];
       },
     });
-    state.prices = data.items;
-    renderPrices();
-    say("prices-msg", `✓ ${count} producto(s) actualizado(s). La web se actualiza en 1 o 2 minutos.`, "ok");
+
+    applyReventaData(data);
+    closeProductEditor();
+    say("prices-msg", `✓ "${name}" guardado. La web se actualiza en 1 o 2 minutos.`, "ok");
   } catch (error) {
-    say("prices-msg", explain(error), "error");
+    say("product-msg", explain(error), "error");
   } finally {
     state.busy = false;
-    updatePriceState();
+    $("product-save").disabled = false;
+    $("product-save").textContent = "GUARDAR PRODUCTO";
   }
 }
 
@@ -921,6 +1350,46 @@ function bindEvents() {
   $("reset-prices").addEventListener("click", () => {
     renderPrices();
     say("prices-msg", "Cambios descartados.");
+  });
+
+  // Categorías
+  $("cat-add").addEventListener("click", addCategory);
+  $("cat-new-name").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addCategory();
+    }
+  });
+  $("save-cats").addEventListener("click", saveCategories);
+  $("reset-cats").addEventListener("click", () => {
+    state.catDraft = state.categories.map((c) => ({ ...c }));
+    renderCategories();
+    say("cats-msg", "Cambios descartados.");
+  });
+
+  // Editor de producto
+  $("new-product").addEventListener("click", () => openProductEditor());
+  $("product-editor").addEventListener("submit", saveProduct);
+  $("product-cancel").addEventListener("click", closeProductEditor);
+
+  const productInput = $("product-photo");
+  const productDrop = $("product-drop");
+  productInput.addEventListener("change", async () => {
+    await setProductPhoto(productInput.files);
+    productInput.value = "";
+  });
+  ["dragenter", "dragover"].forEach((type) =>
+    productDrop.addEventListener(type, (event) => {
+      event.preventDefault();
+      productDrop.classList.add("is-over");
+    }),
+  );
+  ["dragleave", "drop"].forEach((type) =>
+    productDrop.addEventListener(type, () => productDrop.classList.remove("is-over")),
+  );
+  productDrop.addEventListener("drop", (event) => {
+    event.preventDefault();
+    setProductPhoto(event.dataTransfer.files);
   });
 
   $("new-item").addEventListener("click", () => openEditor());

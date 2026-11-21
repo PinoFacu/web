@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&amp;family=Outfit:wght@700;800;900&amp;display=swap"
     />
     <link rel="stylesheet" href="style.css?v=5" />
-    <link rel="stylesheet" href="reventa.css?v=6" />
+    <link rel="stylesheet" href="reventa.css?v=7" />
   </head>
 
   <body>
@@ -75,7 +75,8 @@
 
         <div class="rv-notice">
           <b>📦 Compra mínima según categoría</b>
-          <ul>
+          <!-- Se completa con los mínimos de cada categoría (reventa/productos.json) -->
+          <ul id="min-list">
             <li><b>Muebles de cocina:</b> desde 2 unidades por producto</li>
             <li><b>Camas, roperos y vestidores:</b> desde 3 unidades por producto</li>
           </ul>
@@ -173,7 +174,14 @@
       // Si ese archivo no carga, se usa la lista de respaldo de abajo.
       const DATA_URL = "reventa/productos.json";
       const WHATSAPP_NUMBER = "542216013657";
-      const CATEGORY_ORDER = ["CAMAS", "MUEBLES DE COCINA", "ROPEROS", "VESTIDORES"];
+      // Categorías y compra mínima por defecto (se reemplazan por las de productos.json).
+      const DEFAULT_CATEGORIES = [
+        { id: "CAMAS", name: "CAMAS", min: 3 },
+        { id: "MUEBLES DE COCINA", name: "MUEBLES DE COCINA", min: 2 },
+        { id: "ROPEROS", name: "ROPEROS", min: 3 },
+        { id: "VESTIDORES", name: "VESTIDORES", min: 3 },
+      ];
+      let categories = DEFAULT_CATEGORIES;
       const IMG = "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/";
 
       const fallbackProducts = [
@@ -282,6 +290,24 @@
         return "MUEBLES DE COCINA";
       }
 
+      function normalizeCategories(list) {
+        if (!Array.isArray(list)) return DEFAULT_CATEGORIES;
+        const clean = list
+          .map((c) => ({
+            id: String(c.id || c.name || "").trim(),
+            name: String(c.name || c.id || "").trim(),
+            min: Math.max(1, parseInt(c.min, 10) || 3),
+          }))
+          .filter((c) => c.id && c.name);
+        return clean.length ? clean : DEFAULT_CATEGORIES;
+      }
+
+      function groupFor(rawGroup, name, cat) {
+        if (categories.some((c) => c.id === rawGroup)) return rawGroup;
+        const guess = inferGroup(name, cat);
+        return categories.some((c) => c.id === guess) ? guess : categories[0].id;
+      }
+
       function normalize(row, index) {
         const name = String(row.name || row.producto || "").trim();
         const cat = String(row.cat || row.categoria || "").trim();
@@ -292,13 +318,15 @@
           id: String(row.id || `p${index}`),
           name,
           cat,
-          group: CATEGORY_ORDER.includes(rawGroup) ? rawGroup : inferGroup(name, cat),
+          group: groupFor(rawGroup, name, cat),
+          description: String(row.description || "").trim(),
           price: Number(row.price ?? row.precio),
           img: row.img || row.imagen || "",
         };
       }
 
-      const minQty = (product) => (product.group === "MUEBLES DE COCINA" ? 2 : 3);
+      const categoryOf = (product) => categories.find((c) => c.id === product.group);
+      const minQty = (product) => categoryOf(product)?.min || 3;
       const findProduct = (id) => products.find((p) => p.id === id);
 
       async function load() {
@@ -308,15 +336,45 @@
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           const rows = Array.isArray(data) ? data : data.items || [];
+          categories = normalizeCategories(data.categories);
           products = rows
             .filter((row) => row.active !== false && String(row.activo).toLowerCase() !== "false")
             .map(normalize)
             .filter((p) => p.name && Number.isFinite(p.price) && p.price > 0);
         } catch (error) {
           console.warn("Se usan los productos de respaldo:", error);
-          products = fallbackProducts;
+          categories = DEFAULT_CATEGORIES;
+          products = fallbackProducts.map(normalize);
         }
+        renderMinimums();
         render();
+      }
+
+      /* ---------- Compra mínima (cartel de arriba) ---------- */
+
+      // "MUEBLES DE COCINA" → "Muebles de cocina"
+      const nice = (text) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+
+      function joinNames(names) {
+        return names.length > 1 ? `${names.slice(0, -1).join(", ")} y ${names.at(-1).toLowerCase()}` : names[0];
+      }
+
+      function renderMinimums() {
+        // Solo las categorías que tienen productos visibles, agrupadas por mínimo.
+        const used = categories.filter((c) => products.some((p) => p.group === c.id));
+        if (!used.length) return;
+
+        const byMin = new Map();
+        used.forEach((c) => byMin.set(c.min, [...(byMin.get(c.min) || []), c]));
+
+        $("min-list").innerHTML = [...byMin.entries()]
+          .sort(([a], [b]) => a - b)
+          .map(([min, list]) => {
+            const names = list.map((c, i) => (i === 0 ? nice(c.name) : c.name.toLowerCase()));
+            const unit = min === 1 ? "unidad" : "unidades";
+            return `<li><b>${escapeHTML(joinNames(names))}:</b> desde ${min} ${unit} por producto</li>`;
+          })
+          .join("");
       }
 
       /* ---------- Catálogo ---------- */
@@ -333,8 +391,9 @@
             <div class="body">
               <div class="cat">${escapeHTML(p.cat)}</div>
               <h3 class="name">${escapeHTML(p.name)}</h3>
+              ${p.description ? `<p class="desc">${escapeHTML(p.description)}</p>` : ""}
               <div class="price">${money(p.price)} <small>c/u</small></div>
-              <div class="rule">Precio reventa · mínimo ${min} unidades</div>
+              <div class="rule">Precio reventa · mínimo ${min} ${min === 1 ? "unidad" : "unidades"}</div>
               <div class="controls">
                 <div class="qty">
                   <button type="button" data-step="-1" aria-label="Restar unidad">−</button>
@@ -357,15 +416,16 @@
           return;
         }
 
-        $("categories").innerHTML = CATEGORY_ORDER.map((group) => {
-          const list = products.filter((p) => p.group === group);
-          if (!list.length) return "";
-          const id = "cat-" + group.toLowerCase().replaceAll(" ", "-");
-          return `
+        $("categories").innerHTML = categories
+          .map((category, index) => {
+            const list = products.filter((p) => p.group === category.id);
+            if (!list.length) return "";
+            const id = `cat-${index}`;
+            return `
             <section class="category" id="${id}">
               <button class="category-toggle" type="button" aria-expanded="false" aria-controls="${id}-content">
                 <span class="category-meta">
-                  <span>${group}</span>
+                  <span>${escapeHTML(category.name)}</span>
                   <span class="category-count">${list.length} ${list.length === 1 ? "producto" : "productos"}</span>
                 </span>
                 <span class="category-arrow" aria-hidden="true">⌄</span>
@@ -378,7 +438,8 @@
                 </div>
               </div>
             </section>`;
-        }).join("");
+          })
+          .join("");
 
         // Se mantienen abiertas las categorías que ya estaban abiertas (o la primera, al cargar).
         const sections = [...document.querySelectorAll(".category")];

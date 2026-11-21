@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T00:28:55.477Z",
+  "updatedAt": "2026-11-21T00:29:12.229Z",
   "items": [
     {
       "id": "r80",
@@ -18,7 +18,8 @@
       "name": "Ropero 1,20 m",
       "price": 129999,
       "active": true,
-      "img": "https://raw.githubusercontent.com/PinoFacu/mayorista/refs/heads/main/RoperoDePino-3Puertas-2.png"
+      "img": "reventa/fotos/r120-mwpo79vh.webp",
+      "description": ""
     },
     {
       "id": "r160",
